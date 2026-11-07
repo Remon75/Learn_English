@@ -25,8 +25,8 @@ response:
       {
         "report": {
           "childId": "string",
-          "periodStart": "1995-06-17T12:28:52.936Z",
-          "periodEnd": "1996-07-26T14:40:13.558Z",
+          "periodStart": "1971-10-16T21:01:08.456Z",
+          "periodEnd": "1971-10-16T21:01:08.456Z",
           "minutesLearned": 4985.007622744888,
           "sessionsCompleted": 9975,
           "lessonsCompleted": 4908,
@@ -47,13 +47,13 @@ response:
             {
               "lessonId": "string",
               "lessonTitle": "string",
-              "completedAt": "1990-06-19T11:15:53.541Z",
+              "completedAt": "1971-10-16T21:01:08.456Z",
               "score": 7706.3700603321195
             },
             {
               "lessonId": "string",
               "lessonTitle": "string",
-              "completedAt": "2015-06-15T22:00:49.595Z",
+              "completedAt": "1971-10-16T21:01:08.456Z",
               "score": 9324.131805915385
             }
           ]

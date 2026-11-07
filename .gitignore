@@ -10,6 +10,8 @@ apps/api/data/*.db
 apps/api/data/*.db-journal
 apps/api/data/*.db-wal
 apps/api/data/*.db-shm
+# A stale build can still land the database one directory up.
+apps/data/
 apps/web/dev-dist/
 .screenshots/
 *.log

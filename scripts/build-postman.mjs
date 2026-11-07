@@ -14,6 +14,10 @@
  * result. The assertions live here, in one place, rather than being
  * scattered across hand-edited request files.
  *
+ * The output is byte-for-byte reproducible. The Postman CLI generator stamps
+ * `format: date-time` examples with the current time, so step 5 rewrites
+ * those timestamps to a fixed instant.
+ *
  * Usage: node scripts/build-postman.mjs
  */
 import { execFileSync } from 'node:child_process';
@@ -327,14 +331,42 @@ for (const file of requestFiles) {
   writeYaml(file, request);
 }
 
-/* ------------------------------ 5. Summary ------------------------------ */
+/* --------------------- 5. Normalise generated example timestamps --------------------- */
+
+/**
+ * The Postman CLI generator fills `format: date-time` example values with a
+ * fresh timestamp on every run. That makes the build non-deterministic: two
+ * runs of this script on the same spec produce different files, and every
+ * rebuild shows up as a diff in review.
+ *
+ * Replacing the generated timestamps with one fixed instant makes the output
+ * byte-for-byte reproducible. The value is the generator's own canonical
+ * example date, so it stays recognisable.
+ */
+const EXAMPLE_TIMESTAMP = '1971-10-16T21:01:08.456Z';
+const ISO_DATE_TIME = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})/g;
+
+const exampleFiles = walk(targetDir).filter((f) => f.endsWith('.example.yaml'));
+let normalised = 0;
+
+for (const file of exampleFiles) {
+  const original = readFileSync(file, 'utf8');
+  const updated = original.replace(ISO_DATE_TIME, EXAMPLE_TIMESTAMP);
+  if (updated !== original) {
+    writeFileSync(file, updated, 'utf8');
+    normalised += 1;
+  }
+}
+
+/* ------------------------------ 6. Summary ------------------------------ */
 
 console.log(`Built ${targetName} collection`);
 console.log(`  requests: ${requestFiles.length}`);
 console.log(`  with assertions: ${Object.keys(ASSERTIONS).length}`);
+console.log(`  examples normalised: ${normalised}/${exampleFiles.length}`);
 console.log(`  path: ${targetDir}`);
 
-/* ------------------------- 6. Keep the workflow in sync ------------------------- */
+/* ------------------------- 7. Keep the workflow in sync ------------------------- */
 
 /**
  * `.postman/workflows.yaml` tells the Postman CLI which collection is

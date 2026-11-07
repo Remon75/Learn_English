@@ -24,10 +24,16 @@ function envNumber(name: string, fallback: number): number {
 export const PORT = envNumber('PORT', 8080);
 export const HOST = envString('HOST', '0.0.0.0');
 
-/** Where the SQLite database lives. */
+/**
+ * Where the SQLite database lives.
+ *
+ * `here` is `apps/api/src` in development and `apps/api/dist` in a build,
+ * so one level up is `apps/api` in both cases and the default data
+ * directory is `apps/api/data`.
+ */
 export const DATA_DIR = envString(
   'SPARKLE_DATA_DIR',
-  resolve(here, '../../data'),
+  resolve(here, '../data'),
 );
 
 export const DB_PATH = envString(

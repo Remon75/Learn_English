@@ -1,16 +1,18 @@
 # Sparkle English - self-hosted infrastructure
 #
-# Four containers, all FOSS, all on one machine:
+# Three containers, all FOSS, all on one machine:
 #
-#   caddy - edge reverse proxy, automatic TLS (Apache-2.0)
-#   api   - the Node.js API and the media library (MIT)
-#   web   - the static PWA served by Caddy (MIT)
+#   edge - reverse proxy, automatic TLS, security headers (Apache-2.0)
+#   api  - the Node.js API and the media library (MIT)
+#   web  - the static PWA served by Caddy (MIT)
 #
-# The SQLite database and the media library live in named volumes, so a
-# rebuild never touches a child's data.
+# The SQLite database lives in a named volume, so a rebuild never touches a
+# child's data. The lesson media ships inside the images.
 
 services:
-  caddy:
+  # The static PWA. The service MUST be named `web`: the edge proxy resolves
+  # it by service name in infra/caddy/Caddyfile (`reverse_proxy web:8080`).
+  web:
     build:
       context: ..
       dockerfile: infra/Dockerfile.web

@@ -228,6 +228,11 @@ Full instructions, backup/restore and LAN-vs-public guidance:
 | OpenAPI 3.1 lint | No issues found |
 | Postman collection lint | 18 requests, 0 errors, 0 warnings |
 
+> The Docker images were not built on the machine that wrote this README
+> (Docker was not installed there). The Compose topology was validated by
+> resolving every service reference. Build and smoke-test the stack on your
+> own host before using it — `docs/DEPLOYMENT.md` lists the checks.
+
 ---
 
 ## Licence

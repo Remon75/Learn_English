@@ -27,14 +27,14 @@ response:
           "badges": [
             {
               "badgeId": "string",
-              "awardedAt": "1988-05-27T18:48:22.165Z",
+              "awardedAt": "1971-10-16T21:01:08.456Z",
               "title": "string",
               "description": "string",
               "icon": "string"
             },
             {
               "badgeId": "string",
-              "awardedAt": "1970-04-26T05:39:39.912Z",
+              "awardedAt": "1971-10-16T21:01:08.456Z",
               "title": "string",
               "description": "string",
               "icon": "string"
@@ -47,7 +47,7 @@ response:
               "starsEarned": 6354,
               "starsPossible": 8716,
               "attempts": 1415,
-              "lastAttemptAt": "1968-09-04T15:36:02.997Z",
+              "lastAttemptAt": "1971-10-16T21:01:08.456Z",
               "bestScore": 0.7805028383154422
             },
             "key_1": {
@@ -56,7 +56,7 @@ response:
               "starsEarned": 1754,
               "starsPossible": 4427,
               "attempts": 8925,
-              "lastAttemptAt": "2000-10-03T19:17:36.339Z",
+              "lastAttemptAt": "1971-10-16T21:01:08.456Z",
               "bestScore": 0.15755830332636833
             }
           },

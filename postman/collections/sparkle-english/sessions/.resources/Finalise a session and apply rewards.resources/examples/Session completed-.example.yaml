@@ -33,14 +33,14 @@ response:
         "newBadges": [
           {
             "badgeId": "string",
-            "awardedAt": "1957-09-30T06:37:16.239Z",
+            "awardedAt": "1971-10-16T21:01:08.456Z",
             "title": "string",
             "description": "string",
             "icon": "string"
           },
           {
             "badgeId": "string",
-            "awardedAt": "1964-02-07T07:16:14.955Z",
+            "awardedAt": "1971-10-16T21:01:08.456Z",
             "title": "string",
             "description": "string",
             "icon": "string"

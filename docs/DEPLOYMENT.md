@@ -27,6 +27,15 @@ There are two sensible deployment shapes, and the difference matters:
 Nothing else. No database server, no object store, no certificate broker
 account, no paid tier.
 
+> **Verification status.** The Compose topology was checked by parsing
+> `infra/docker-compose.yml` and resolving every `depends_on` and every
+> `reverse_proxy` upstream in `infra/caddy/Caddyfile` against the declared
+> service names — all references resolve. The images themselves were **not**
+> built and run on the machine that produced this documentation, because
+> Docker was not installed there. Build and smoke-test the stack on your own
+> target architecture before you trust it with a child's data; §2.3 and §9
+> list the checks to perform.
+
 ---
 
 ## 2. Shape A — LAN-only deployment
@@ -235,45 +244,55 @@ Everything about a child lives in **one file**: `sparkle.db` inside the
 **Preferred — SQLite's online backup API** (safe while the server is running):
 
 ```bash
-docker compose exec api sh -c \
-  'node -e "
-    const Database = require(\"better-sqlite3\");
-    const db = new Database(\"/data/sparkle.db\");
-    db.backup(\"/data/sparkle-backup.db\").then(() => { db.close(); console.log(\"backup written\"); });
-  "'
+cd infra
 
-docker compose cp api:/data/sparkle-backup.db ./sparkle-backup-$(date +%F).db
+docker compose exec -T api node -e "
+  const Database = require('better-sqlite3');
+  const db = new Database('/data/sparkle.db');
+  db.backup('/data/sparkle-backup.db')
+    .then(() => { db.close(); console.log('backup written'); })
+    .catch((err) => { console.error(err); process.exit(1); });
+"
+
+docker compose cp api:/data/sparkle-backup.db "./backups/sparkle-$(date +%F).db"
 ```
 
-**Simpler — stop and copy the volume:**
+The online backup API takes a consistent snapshot while the API is serving
+requests, so there is no need to stop the server.
+
+**Simpler — stop the API and copy the file:**
 
 ```bash
+cd infra
 docker compose stop api
-docker run --rm \
-  -v "$(docker volume ls -q -f name=api_data):/data:ro" \
-  -v "$PWD:/backup" \
-  alpine \
-  sh -c 'cd /data && tar czf /backup/sparkle-data-$(date +%F).tar.gz .'
+docker compose cp api:/data/sparkle.db "./backups/sparkle-$(date +%F).db"
 docker compose start api
 ```
+
+> Copying `sparkle.db` while the server is running can capture a torn WAL
+> state. Either stop the API first, or use the online backup API above.
 
 ### 5.2 Restore
 
 ```bash
+cd infra
 docker compose stop api
-docker run --rm \
-  -v "$(docker volume ls -q -f name=api_data):/data" \
-  -v "$PWD:/backup" \
-  alpine \
-  sh -c 'rm -f /data/sparkle.db /data/sparkle.db-wal /data/sparkle.db-shm && \
-         cp /backup/sparkle-backup-2026-11-07.db /data/sparkle.db && \
-         chown 1000:1000 /data/sparkle.db'
+
+# Remove the live database and its write-ahead log.
+docker compose exec -T api sh -c 'rm -f /data/sparkle.db /data/sparkle.db-wal /data/sparkle.db-shm'
+
+# Copy the backup in and give it back to the `node` user (uid/gid 1000).
+docker compose cp "./backups/sparkle-2026-11-07.db" api:/data/sparkle.db
+docker compose exec -T api chown 1000:1000 /data/sparkle.db
+
 docker compose start api
-docker compose exec api node -e "console.log('ok')"
+docker compose ps          # api should report (healthy)
+curl -fsS https://learn.example.com/health
 ```
 
-The API container runs as the `node` user (uid/gid `1000`), hence the
-`chown`.
+The API container runs as the unprivileged `node` user (uid/gid `1000`), hence
+the `chown`. The schema is re-created on boot by the idempotent migrations, so
+a restore into a fresh volume works too.
 
 ### 5.3 A realistic backup schedule
 
@@ -281,7 +300,13 @@ The API container runs as the `node` user (uid/gid `1000`), hence the
 # 02:17 every night - an odd minute so it does not collide with every other
 # cron job on the planet
 17 2 * * * cd /opt/sparkle-english/infra && \
-  docker compose cp api:/data/sparkle.db ./backups/sparkle-$(date +\%F).db && \
+  mkdir -p backups && \
+  docker compose exec -T api node -e "
+    const Database = require('better-sqlite3');
+    const db = new Database('/data/sparkle.db');
+    db.backup('/data/sparkle-backup.db').then(() => db.close());
+  " && \
+  docker compose cp api:/data/sparkle-backup.db ./backups/sparkle-$(date +\%F).db && \
   find ./backups -name 'sparkle-*.db' -mtime +30 -delete
 ```
 
@@ -421,7 +446,7 @@ npm registry mirror.
 |---|---|
 | Container images | ~350 MiB total |
 | SQLite database | < 1 MiB for a year of use |
-| Lesson media (in the web image) | ~2 MiB |
+| Lesson media (in the web image) | ~1.7 MiB |
 | Caddy certificates and state | < 10 MiB |
 
 ---

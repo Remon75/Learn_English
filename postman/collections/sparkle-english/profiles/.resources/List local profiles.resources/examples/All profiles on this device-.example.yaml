@@ -22,7 +22,7 @@ response:
             "id": "string",
             "avatarId": "string",
             "ageBand": "7-8",
-            "createdAt": "1965-09-10T23:03:51.465Z",
+            "createdAt": "1971-10-16T21:01:08.456Z",
             "currentLevelId": "string",
             "nickname": "string"
           },
@@ -30,7 +30,7 @@ response:
             "id": "string",
             "avatarId": "string",
             "ageBand": "5-6",
-            "createdAt": "1956-05-11T22:56:56.281Z",
+            "createdAt": "1971-10-16T21:01:08.456Z",
             "currentLevelId": "string",
             "nickname": "string"
           }

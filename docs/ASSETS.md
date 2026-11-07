@@ -27,7 +27,8 @@ npm run assets:icons    # PWA icons + favicon
 | PWA icons | **3** | PNG, 192 px / 512 px / 512 px maskable | `scripts/generate-icons.mjs` |
 | Favicon | **1** | SVG | `scripts/generate-icons.mjs` |
 
-Total size: under 3 MiB for the whole media library.
+Total size: ~1.7 MiB for the whole media library (54 audio files at 1.7 MiB,
+63 SVG illustrations at 17 KiB, icons at 8 KiB).
 
 ### 1.1 Audio inventory
 

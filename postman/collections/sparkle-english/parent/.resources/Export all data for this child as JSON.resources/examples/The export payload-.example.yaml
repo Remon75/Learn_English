@@ -21,12 +21,12 @@ response:
     type: json
     content: |-
       {
-        "exportedAt": "1965-12-18T18:17:35.127Z",
+        "exportedAt": "1971-10-16T21:01:08.456Z",
         "profile": {
           "id": "string",
           "avatarId": "string",
           "ageBand": "3-4",
-          "createdAt": "1973-07-18T22:42:25.308Z",
+          "createdAt": "1971-10-16T21:01:08.456Z",
           "currentLevelId": "string",
           "nickname": "string"
         },
@@ -36,14 +36,14 @@ response:
           "badges": [
             {
               "badgeId": "string",
-              "awardedAt": "2013-11-01T04:17:13.666Z",
+              "awardedAt": "1971-10-16T21:01:08.456Z",
               "title": "string",
               "description": "string",
               "icon": "string"
             },
             {
               "badgeId": "string",
-              "awardedAt": "1948-02-01T21:50:23.936Z",
+              "awardedAt": "1971-10-16T21:01:08.456Z",
               "title": "string",
               "description": "string",
               "icon": "string"
@@ -56,7 +56,7 @@ response:
               "starsEarned": 2096,
               "starsPossible": 8637,
               "attempts": 7244,
-              "lastAttemptAt": "1999-04-28T02:22:50.977Z",
+              "lastAttemptAt": "1971-10-16T21:01:08.456Z",
               "bestScore": 0.16473896382376552
             },
             "key_1": {
@@ -65,7 +65,7 @@ response:
               "starsEarned": 2356,
               "starsPossible": 3135,
               "attempts": 6188,
-              "lastAttemptAt": "1961-05-18T20:21:16.834Z",
+              "lastAttemptAt": "1971-10-16T21:01:08.456Z",
               "bestScore": 0.1846744967624545
             }
           },

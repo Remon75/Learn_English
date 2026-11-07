@@ -19,6 +19,11 @@ and self-hosted infrastructure are implemented and verified.
 | Postman collection run vs. live server | 18 requests, 29 assertions, 0 failed |
 | OpenAPI 3.1 lint | No issues found |
 | Postman collection lint | 18 requests, 0 errors, 0 warnings |
+| PWA production build | 16 precache entries, 434 KiB; PixiJS split into a lazy 901 KiB chunk |
+
+> The Docker topology in `infra/` was validated by resolving every service
+> reference, but the images were not built on the machine that wrote this
+> document — Docker was not installed there. See `docs/DEPLOYMENT.md`.
 
 ---
 
@@ -265,10 +270,10 @@ slow connection never waits for a particle engine to see their first lesson.
 
 | Data category | Collected | Stored | Leaves the device |
 |---|---|---|---|
-| Child identifier | Random opaque token | Yes (hashed token only) | Never |
+| Child identifier | Random opaque UUID | Yes | Never |
 | Nickname | Optional | Yes | Never |
 | Avatar, age band | Yes | Yes | Never |
-| Device token | Random secret | Hashed | Never |
+| Device token | Random 256-bit secret | Hashed (scrypt + salt) | Never |
 | Caregiver PIN | 4 digits | Hashed (scrypt + salt) | Never |
 | Activity attempts | Activity id, answer, score, duration | Yes | Never |
 | Voice recordings | **Not collected** | **Never stored** | Never |
