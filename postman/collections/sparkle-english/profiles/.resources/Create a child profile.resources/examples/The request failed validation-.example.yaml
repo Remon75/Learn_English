@@ -1,0 +1,29 @@
+$kind: http-example
+name: The request failed validation.
+request:
+  url: "{{baseUrl}}/api/v1/profiles"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "nickname": "Sam",
+        "avatarId": "fox",
+        "ageBand": "3-4",
+        "caregiverPin": "1234"
+      }
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "error": "string",
+        "message": "string"
+      }
+order: 2000

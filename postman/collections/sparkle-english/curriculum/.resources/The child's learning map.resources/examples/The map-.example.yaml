@@ -1,0 +1,59 @@
+$kind: http-example
+name: The map.
+request:
+  url: "{{baseUrl}}/api/v1/map"
+  method: GET
+  headers:
+    - key: X-Device-Token
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+    - key: Accept
+      value: application/json
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "childId": "string",
+        "totalStars": 4620,
+        "nodes": [
+          {
+            "id": "string",
+            "title": "string",
+            "status": "locked",
+            "starsEarned": 4473,
+            "starsPossible": 5945,
+            "objective": "string",
+            "levelId": "string",
+            "levelTitle": "string",
+            "levelColor": "string",
+            "unitId": "string",
+            "unitTitle": "string",
+            "icon": "string",
+            "attempts": 4439
+          },
+          {
+            "id": "string",
+            "title": "string",
+            "status": "available",
+            "starsEarned": 9535,
+            "starsPossible": 4803,
+            "objective": "string",
+            "levelId": "string",
+            "levelTitle": "string",
+            "levelColor": "string",
+            "unitId": "string",
+            "unitTitle": "string",
+            "icon": "string",
+            "attempts": 1998
+          }
+        ]
+      }
+order: 1000

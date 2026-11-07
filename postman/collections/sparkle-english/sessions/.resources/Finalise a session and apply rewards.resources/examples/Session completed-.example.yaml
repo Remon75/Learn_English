@@ -1,0 +1,52 @@
+$kind: http-example
+name: Session completed.
+request:
+  url: "{{baseUrl}}/api/v1/sessions/:sessionId/complete"
+  method: POST
+  headers:
+    - key: X-Device-Token
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: sessionId
+      value: string
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "sessionId": "string",
+        "starsEarned": 8339,
+        "starsPossible": 4181,
+        "score": 0.9853714497294277,
+        "newBadges": [
+          {
+            "badgeId": "string",
+            "awardedAt": "1957-09-30T06:37:16.239Z",
+            "title": "string",
+            "description": "string",
+            "icon": "string"
+          },
+          {
+            "badgeId": "string",
+            "awardedAt": "1964-02-07T07:16:14.955Z",
+            "title": "string",
+            "description": "string",
+            "icon": "string"
+          }
+        ],
+        "completed": false,
+        "nextLessonId": "string"
+      }
+order: 1000

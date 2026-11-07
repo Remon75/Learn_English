@@ -1,0 +1,33 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/api/v1/sessions"
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: json
+  content: |
+    {
+      "lessonId": "{{lessonId}}"
+    }
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/Start a learning session.resources/examples
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('starts the session', () => pm.response.to.have.status(201));
+      const lesson = pm.response.json().lesson;
+      const choose = lesson.activities.find(a => a.kind === 'choose');
+      const activity = choose || lesson.activities[0];
+      pm.collectionVariables.set('activityId', activity.id);
+      pm.collectionVariables.set('correctResponse', choose ? choose.options.find(o => o.correct).id : (activity.expected || 'said'));
+      pm.collectionVariables.set('sessionId', pm.response.json().sessionId);

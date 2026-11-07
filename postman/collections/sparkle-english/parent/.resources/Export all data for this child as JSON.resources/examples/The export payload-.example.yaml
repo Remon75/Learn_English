@@ -1,0 +1,81 @@
+$kind: http-example
+name: The export payload.
+request:
+  url: "{{baseUrl}}/api/v1/parent/export"
+  method: GET
+  headers:
+    - key: X-Device-Token
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+    - key: Accept
+      value: application/json
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "exportedAt": "1965-12-18T18:17:35.127Z",
+        "profile": {
+          "id": "string",
+          "avatarId": "string",
+          "ageBand": "3-4",
+          "createdAt": "1973-07-18T22:42:25.308Z",
+          "currentLevelId": "string",
+          "nickname": "string"
+        },
+        "progress": {
+          "childId": "string",
+          "totalStars": 2235,
+          "badges": [
+            {
+              "badgeId": "string",
+              "awardedAt": "2013-11-01T04:17:13.666Z",
+              "title": "string",
+              "description": "string",
+              "icon": "string"
+            },
+            {
+              "badgeId": "string",
+              "awardedAt": "1948-02-01T21:50:23.936Z",
+              "title": "string",
+              "description": "string",
+              "icon": "string"
+            }
+          ],
+          "lessons": {
+            "key_0": {
+              "lessonId": "string",
+              "status": "in-progress",
+              "starsEarned": 2096,
+              "starsPossible": 8637,
+              "attempts": 7244,
+              "lastAttemptAt": "1999-04-28T02:22:50.977Z",
+              "bestScore": 0.16473896382376552
+            },
+            "key_1": {
+              "lessonId": "string",
+              "status": "in-progress",
+              "starsEarned": 2356,
+              "starsPossible": 3135,
+              "attempts": 6188,
+              "lastAttemptAt": "1961-05-18T20:21:16.834Z",
+              "bestScore": 0.1846744967624545
+            }
+          },
+          "skillMastery": {
+            "key_0": 0.6528214670252055
+          },
+          "currentStreakDays": 5532,
+          "longestStreakDays": 5732,
+          "speakingRecordings": 515,
+          "totalMinutesLearned": 320.59677178040147
+        }
+      }
+order: 1000

@@ -1,0 +1,13 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/api/v1/curriculum/lessons"
+method: GET
+headers:
+  Accept: application/json
+settings: {}
+examples: ./.resources/List every lesson in curriculum order.resources/examples
+order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: pm.test('returns the lesson index', () => pm.expect(pm.response.json().lessons.length).to.be.above(0));

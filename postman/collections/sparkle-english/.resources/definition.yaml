@@ -1,0 +1,53 @@
+$kind: collection
+description: |-
+  A complete, self-hostable API for an offline-first English learning platform
+  aimed at children aged 3 and above.
+
+  **Privacy model**
+
+  * No account system, no email address, no OAuth provider.
+  * A child profile is bound to a per-device secret (`X-Device-Token`).
+  * Adult-only endpoints require a 4-digit caregiver PIN (`X-Caregiver-Pin`).
+  * No request in this API is forwarded to any third-party service.
+  * There is no analytics, advertising, or telemetry endpoint.
+
+  **Scoring model**
+
+  The server grades every activity and owns the star and badge values.
+  A client may supply an explicit `score` for activities that cannot be
+  graded automatically (speaking and storytelling); it may never inflate
+  the value of an auto-gradable activity.
+variables:
+  - key: baseUrl
+    value: http://localhost:8080
+  - key: deviceToken
+    value: ""
+    description: Issued by POST /api/v1/profiles.
+  - key: caregiverPin
+    value: "1234"
+    description: 4-digit PIN for adult-only endpoints.
+  - key: newPin
+    value: "1357"
+    description: Replacement PIN used by the PIN-change request.
+  - key: lessonId
+    value: l1-u1-s1
+  - key: sessionId
+    value: ""
+  - key: activityId
+    value: ""
+  - key: correctResponse
+    value: ""
+name: Sparkle English API
+scripts:
+  - type: http:beforeRequest
+    language: text/javascript
+    code: |-
+      const deviceToken = pm.collectionVariables.get('deviceToken');
+      if (deviceToken && !pm.request.headers.has('X-Device-Token')) {
+        pm.request.headers.add('X-Device-Token', deviceToken);
+      }
+
+      const caregiverPin = pm.collectionVariables.get('caregiverPin');
+      if (caregiverPin && pm.request.url.toString().includes('/api/v1/parent/')) {
+        pm.request.headers.add('X-Caregiver-Pin', caregiverPin);
+      }

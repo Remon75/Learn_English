@@ -1,0 +1,13 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/api/v1/curriculum/levels"
+method: GET
+headers:
+  Accept: application/json
+settings: {}
+examples: ./.resources/List curriculum levels.resources/examples
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: pm.test('returns at least six levels', () => pm.expect(pm.response.json().levels.length).to.be.at.least(6));

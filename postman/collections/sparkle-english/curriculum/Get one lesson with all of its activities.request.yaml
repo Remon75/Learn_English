@@ -1,0 +1,24 @@
+$kind: http-request
+description: |
+  Media references are rewritten to concrete, extension-bearing URLs so
+  the client can decode audio reliably. Logical paths in the stored
+  curriculum carry no extension; this response always does.
+url: "{{baseUrl}}/api/v1/curriculum/lessons/:lessonId"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  - key: lessonId
+    value: "{{lessonId}}"
+    disabled: false
+    description: "(Required) "
+settings: {}
+examples: ./.resources/Get one lesson with all of its activities.resources/examples
+order: 3000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('returns the lesson', () => pm.response.to.have.status(200));
+      pm.test('has activities', () => pm.expect(pm.response.json().lesson.activities.length).to.be.above(0));
+      pm.test('media references stay on our own origin', () => { const json = pm.response.text(); pm.expect(json).to.not.include('http://'); pm.expect(json).to.not.include('https://'); });

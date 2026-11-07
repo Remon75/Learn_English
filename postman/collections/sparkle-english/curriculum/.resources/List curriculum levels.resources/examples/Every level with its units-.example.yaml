@@ -1,0 +1,69 @@
+$kind: http-example
+name: Every level with its units.
+request:
+  url: "{{baseUrl}}/api/v1/curriculum/levels"
+  method: GET
+  headers:
+    Accept: application/json
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "levels": [
+          {
+            "id": "string",
+            "title": "string",
+            "description": "string",
+            "ageBand": "string",
+            "color": "string",
+            "units": [
+              {
+                "id": "string",
+                "title": "string",
+                "theme": "string",
+                "icon": "string",
+                "lessonCount": 6780
+              },
+              {
+                "id": "string",
+                "title": "string",
+                "theme": "string",
+                "icon": "string",
+                "lessonCount": 9648
+              }
+            ]
+          },
+          {
+            "id": "string",
+            "title": "string",
+            "description": "string",
+            "ageBand": "string",
+            "color": "string",
+            "units": [
+              {
+                "id": "string",
+                "title": "string",
+                "theme": "string",
+                "icon": "string",
+                "lessonCount": 4059
+              },
+              {
+                "id": "string",
+                "title": "string",
+                "theme": "string",
+                "icon": "string",
+                "lessonCount": 821
+              }
+            ]
+          }
+        ]
+      }
+order: 1000

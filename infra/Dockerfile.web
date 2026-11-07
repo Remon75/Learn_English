@@ -1,0 +1,31 @@
+# Sparkle English - static web image
+#
+# Builds the PWA and serves it with Caddy. The built assets are copied into
+# the image so there is no volume to populate and no chance of serving a
+# stale build.
+
+FROM node:24-alpine AS build
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json packages/shared/
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+RUN npm ci --omit=optional --no-audit --no-fund
+
+COPY tsconfig.base.json ./
+COPY packages/shared packages/shared
+COPY apps/web apps/web
+
+RUN npm run build --workspace @sparkle/shared \
+ && npm run build --workspace @sparkle/web
+
+
+FROM caddy:2.10-alpine AS runtime
+
+COPY --from=build /app/apps/web/dist /srv
+COPY infra/caddy/web.Caddyfile /etc/caddy/Caddyfile
+
+EXPOSE 8080
+
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

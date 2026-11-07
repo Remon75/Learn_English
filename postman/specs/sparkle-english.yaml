@@ -1,0 +1,873 @@
+openapi: 3.1.0
+info:
+  title: Sparkle English API
+  version: 0.1.0
+  summary: Local-first API for a privacy-first English learning app for children.
+  description: |
+    A complete, self-hostable API for an offline-first English learning platform
+    aimed at children aged 3 and above.
+
+    **Privacy model**
+
+    * No account system, no email address, no OAuth provider.
+    * A child profile is bound to a per-device secret (`X-Device-Token`).
+    * Adult-only endpoints require a 4-digit caregiver PIN (`X-Caregiver-Pin`).
+    * No request in this API is forwarded to any third-party service.
+    * There is no analytics, advertising, or telemetry endpoint.
+
+    **Scoring model**
+
+    The server grades every activity and owns the star and badge values.
+    A client may supply an explicit `score` for activities that cannot be
+    graded automatically (speaking and storytelling); it may never inflate
+    the value of an auto-gradable activity.
+  license:
+    name: MIT
+    identifier: MIT
+  contact:
+    name: Sparkle English contributors
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: /
+    description: This instance (self-hosted)
+
+tags:
+  - name: profiles
+    description: Local child profiles and device binding.
+  - name: curriculum
+    description: Versioned, offline-capable curriculum content.
+  - name: sessions
+    description: Learning sessions, event recording and server-side scoring.
+  - name: parent
+    description: Caregiver-gated settings, reports, export and erasure.
+  - name: media
+    description: Local lesson media with content negotiation.
+
+paths:
+  /health:
+    get:
+      tags: [profiles]
+      summary: Liveness and offline capability
+      operationId: getHealth
+      responses:
+        '200':
+          description: The service is healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service, offline]
+                properties:
+                  status: { type: string, const: ok }
+                  service: { type: string }
+                  offline: { type: boolean, description: Always true; the app is designed for local use. }
+
+  /api/v1/profiles:
+    get:
+      tags: [profiles]
+      summary: List local profiles
+      description: Used by the caregiver profile switcher. Returns no secrets.
+      operationId: listProfiles
+      responses:
+        '200':
+          description: All profiles on this device.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [profiles]
+                properties:
+                  profiles:
+                    type: array
+                    items: { $ref: '#/components/schemas/Profile' }
+    post:
+      tags: [profiles]
+      summary: Create a child profile
+      description: |
+        Creates a profile and binds it to a freshly generated device token.
+        The response is the only time the device token is returned; the client
+        must store it. The caregiver PIN is stored as a salted scrypt hash.
+      operationId: createProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [avatarId, ageBand, caregiverPin]
+              properties:
+                nickname:
+                  type: string
+                  minLength: 1
+                  maxLength: 24
+                  description: Optional. Never required and never used for analytics.
+                avatarId:
+                  type: string
+                  enum: [fox, owl, panda, cat, frog, bear]
+                ageBand:
+                  type: string
+                  enum: ['3-4', '5-6', '7-8']
+                caregiverPin:
+                  type: string
+                  pattern: '^\d{4}$'
+                  description: Exactly 4 digits. Gates adult-only screens.
+            examples:
+              toddler:
+                summary: A three year old
+                value:
+                  nickname: Sam
+                  avatarId: fox
+                  ageBand: '3-4'
+                  caregiverPin: '1234'
+      responses:
+        '201':
+          description: Profile created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [profile, deviceToken]
+                properties:
+                  profile: { $ref: '#/components/schemas/Profile' }
+                  deviceToken:
+                    type: string
+                    description: Secret proving this device owns this profile.
+                  message: { type: string }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/profiles/me:
+    get:
+      tags: [profiles]
+      summary: Get the profile bound to the presented device token
+      operationId: getMyProfile
+      security:
+        - deviceToken: []
+      responses:
+        '200':
+          description: The current profile.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/curriculum/levels:
+    get:
+      tags: [curriculum]
+      summary: List curriculum levels
+      operationId: listLevels
+      responses:
+        '200':
+          description: Every level with its units.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [levels]
+                properties:
+                  levels:
+                    type: array
+                    items: { $ref: '#/components/schemas/LevelSummary' }
+
+  /api/v1/curriculum/lessons:
+    get:
+      tags: [curriculum]
+      summary: List every lesson in curriculum order
+      operationId: listLessons
+      responses:
+        '200':
+          description: Lesson index.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [lessons]
+                properties:
+                  lessons:
+                    type: array
+                    items: { $ref: '#/components/schemas/LessonSummary' }
+
+  /api/v1/curriculum/lessons/{lessonId}:
+    get:
+      tags: [curriculum]
+      summary: Get one lesson with all of its activities
+      description: |
+        Media references are rewritten to concrete, extension-bearing URLs so
+        the client can decode audio reliably. Logical paths in the stored
+        curriculum carry no extension; this response always does.
+      operationId: getLesson
+      parameters:
+        - name: lessonId
+          in: path
+          required: true
+          schema: { type: string }
+          example: l1-u1-s1
+      responses:
+        '200':
+          description: The lesson.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [lesson]
+                properties:
+                  lesson: { $ref: '#/components/schemas/Lesson' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/map:
+    get:
+      tags: [curriculum]
+      summary: The child's learning map
+      description: |
+        Returns every lesson with its lock state. A lesson unlocks when the
+        previous lesson in curriculum order is completed. Locked lessons stay
+        visible so the child can see the whole journey.
+      operationId: getMap
+      security:
+        - deviceToken: []
+      responses:
+        '200':
+          description: The map.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [childId, totalStars, nodes]
+                properties:
+                  childId: { type: string }
+                  totalStars: { type: integer, minimum: 0 }
+                  nodes:
+                    type: array
+                    items: { $ref: '#/components/schemas/MapNode' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/sessions:
+    post:
+      tags: [sessions]
+      summary: Start a learning session
+      operationId: startSession
+      security:
+        - deviceToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lessonId]
+              properties:
+                lessonId: { type: string, example: l1-u1-s1 }
+      responses:
+        '201':
+          description: Session created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessionId, lesson, startedAt]
+                properties:
+                  sessionId: { type: string }
+                  lesson: { $ref: '#/components/schemas/Lesson' }
+                  startedAt: { type: string, format: date-time }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/sessions/{sessionId}/events:
+    post:
+      tags: [sessions]
+      summary: Record one activity attempt
+      description: |
+        The server grades the response and owns the score. Retries for the
+        same activity collapse to the best attempt when the session is
+        completed, so a child who taps a wrong answer a few times is neither
+        penalised nor able to inflate their star count.
+      operationId: recordEvent
+      security:
+        - deviceToken: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activityId, elapsedMs]
+              properties:
+                activityId: { type: string, example: a-greet-choose }
+                response:
+                  type: string
+                  description: |
+                    The child's answer, encoded per activity kind:
+                    an option id for `choose`, `left=right` pairs for `match`,
+                    pipe-separated tokens for `order`, a letter for `trace`,
+                    or `said` for `speak`.
+                score:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                  description: |
+                    Client-observed score. Only honoured for activity kinds
+                    that cannot be graded automatically (speaking, storytelling).
+                elapsedMs:
+                  type: integer
+                  minimum: 0
+                  maximum: 600000
+                hintsUsed:
+                  type: integer
+                  minimum: 0
+                  maximum: 10
+                  default: 0
+            examples:
+              correctChoice:
+                summary: A correct picture choice
+                value:
+                  activityId: a-greet-choose
+                  response: hand
+                  elapsedMs: 2400
+                  hintsUsed: 0
+              selfRatedSpeaking:
+                summary: A speaking attempt confirmed by the child
+                value:
+                  activityId: a-greet-speak
+                  response: said
+                  score: 1
+                  elapsedMs: 3100
+                  hintsUsed: 0
+      responses:
+        '200':
+          description: Event accepted and graded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accepted, score, correct]
+                properties:
+                  accepted: { type: boolean }
+                  score: { type: number, minimum: 0, maximum: 1 }
+                  correct: { type: boolean }
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/sessions/{sessionId}/complete:
+    post:
+      tags: [sessions]
+      summary: Finalise a session and apply rewards
+      description: |
+        Computes stars, updates skill mastery, awards any newly earned
+        badges and unlocks the next lesson. The response is the only place
+        stars and badges are ever granted.
+      operationId: completeSession
+      security:
+        - deviceToken: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Session completed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessionId, starsEarned, starsPossible, score, newBadges, completed]
+                properties:
+                  sessionId: { type: string }
+                  starsEarned: { type: integer, minimum: 0 }
+                  starsPossible: { type: integer, minimum: 0 }
+                  score: { type: number, minimum: 0, maximum: 1 }
+                  newBadges:
+                    type: array
+                    items: { $ref: '#/components/schemas/AwardedBadge' }
+                  nextLessonId:
+                    type: string
+                    description: Present when the lesson was completed.
+                  completed: { type: boolean }
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/parent/settings:
+    get:
+      tags: [parent]
+      summary: Read caregiver settings
+      operationId: getParentSettings
+      security:
+        - deviceToken: []
+        - caregiverPin: []
+      responses:
+        '200':
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [settings]
+                properties:
+                  settings: { $ref: '#/components/schemas/ParentSettings' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      tags: [parent]
+      summary: Update caregiver settings
+      operationId: updateParentSettings
+      security:
+        - deviceToken: []
+        - caregiverPin: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dailyLimitMinutes: { type: integer, minimum: 0, maximum: 180 }
+                bedtimeLock: { type: [string, 'null'], pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+                bedtimeWake: { type: [string, 'null'], pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+                sharingRequiresApproval: { type: boolean }
+                microphoneEnabled: { type: boolean }
+                offlineDownloadsEnabled: { type: boolean }
+                audioEnabled: { type: boolean }
+                caregiverLocale: { type: string, minLength: 2, maxLength: 12 }
+                allowOutboundNetwork:
+                  type: boolean
+                  default: false
+                  description: Off by default. The app works with no network at all.
+      responses:
+        '200':
+          description: Settings saved.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [settings]
+                properties:
+                  settings: { $ref: '#/components/schemas/ParentSettings' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/parent/pin:
+    put:
+      tags: [parent]
+      summary: Change the caregiver PIN
+      operationId: changeCaregiverPin
+      security:
+        - deviceToken: []
+        - caregiverPin: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newPin]
+              properties:
+                newPin: { type: string, pattern: '^\d{4}$' }
+      responses:
+        '200':
+          description: PIN changed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [updated]
+                properties:
+                  updated: { type: boolean }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/parent/progress:
+    get:
+      tags: [parent]
+      summary: Full progress snapshot
+      operationId: getParentProgress
+      security:
+        - deviceToken: []
+        - caregiverPin: []
+      responses:
+        '200':
+          description: The progress snapshot.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [progress]
+                properties:
+                  progress: { $ref: '#/components/schemas/ChildProgress' }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/parent/report:
+    get:
+      tags: [parent]
+      summary: Aggregate teacher report
+      description: |
+        Coarse, aggregate data about what was practised. There is no session
+        replay, no keystroke trace, and no third-party analytics sink.
+      operationId: getTeacherReport
+      security:
+        - deviceToken: []
+        - caregiverPin: []
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 365, default: 7 }
+      responses:
+        '200':
+          description: The report.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [report]
+                properties:
+                  report: { $ref: '#/components/schemas/TeacherReport' }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/parent/export:
+    get:
+      tags: [parent]
+      summary: Export all data for this child as JSON
+      operationId: exportData
+      security:
+        - deviceToken: []
+        - caregiverPin: []
+      responses:
+        '200':
+          description: The export payload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exportedAt: { type: string, format: date-time }
+                  profile: { $ref: '#/components/schemas/Profile' }
+                  progress: { $ref: '#/components/schemas/ChildProgress' }
+                  sessions:
+                    type: array
+                    items: { type: object }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/parent/profile:
+    delete:
+      tags: [parent]
+      summary: Erase the child profile and all associated data
+      description: |
+        The GDPR-K erasure path. Removes the profile and every row that
+        references it. Nothing is left in any analytics system because no
+        such system exists.
+      operationId: deleteProfile
+      security:
+        - deviceToken: []
+        - caregiverPin: []
+      responses:
+        '200':
+          description: Profile deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted, childId]
+                properties:
+                  deleted: { type: boolean }
+                  childId: { type: string }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    deviceToken:
+      type: apiKey
+      in: header
+      name: X-Device-Token
+      description: Per-device secret issued when the profile is created.
+    caregiverPin:
+      type: apiKey
+      in: header
+      name: X-Caregiver-Pin
+      description: The 4-digit caregiver PIN. Gates adult-only endpoints.
+
+  responses:
+    BadRequest:
+      description: The request failed validation.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Missing or invalid device token.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: The caregiver PIN was missing or incorrect.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: A stable machine-readable error code.
+        message: { type: string }
+        details:
+          type: array
+          items: { type: object }
+
+    Profile:
+      type: object
+      required: [id, avatarId, ageBand, createdAt, currentLevelId]
+      properties:
+        id: { type: string }
+        nickname: { type: [string, 'null'] }
+        avatarId: { type: string }
+        ageBand: { type: string, enum: ['3-4', '5-6', '7-8'] }
+        createdAt: { type: string, format: date-time }
+        currentLevelId: { type: string }
+
+    MediaRef:
+      type: object
+      required: [kind, src]
+      properties:
+        kind: { type: string, enum: [audio, image, animation] }
+        src:
+          type: string
+          description: Same-origin relative path. Never a third-party URL.
+        label: { type: string }
+        durationSec: { type: number }
+        transcript: { type: string }
+
+    ChoiceOption:
+      type: object
+      required: [id, label, correct]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        media: { $ref: '#/components/schemas/MediaRef' }
+        correct: { type: boolean }
+
+    MatchPair:
+      type: object
+      required: [id, left, right]
+      properties:
+        id: { type: string }
+        left: { $ref: '#/components/schemas/MediaRef' }
+        right: { $ref: '#/components/schemas/MediaRef' }
+
+    Activity:
+      type: object
+      required: [id, kind, prompt, stars, seconds, difficulty, skills]
+      properties:
+        id: { type: string }
+        kind:
+          type: string
+          enum: [listen, speak, trace, match, choose, order, story]
+        prompt: { type: string }
+        instructionAudio: { $ref: '#/components/schemas/MediaRef' }
+        stimulus: { $ref: '#/components/schemas/MediaRef' }
+        options:
+          type: array
+          items: { $ref: '#/components/schemas/ChoiceOption' }
+        pairs:
+          type: array
+          items: { $ref: '#/components/schemas/MatchPair' }
+        orderTokens:
+          type: array
+          items: { type: string }
+        solution:
+          type: array
+          items: { type: string }
+        speakTarget: { type: string }
+        expected: { type: string }
+        stars: { type: integer, enum: [1, 2, 3] }
+        seconds: { type: integer, minimum: 1 }
+        difficulty: { type: integer, enum: [1, 2, 3] }
+        skills:
+          type: array
+          items: { type: string }
+
+    Lesson:
+      type: object
+      required: [id, title, objective, activities]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        objective: { type: string }
+        activities:
+          type: array
+          items: { $ref: '#/components/schemas/Activity' }
+
+    LessonSummary:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        objective: { type: string }
+        levelId: { type: string }
+        levelTitle: { type: string }
+        unitId: { type: string }
+        unitTitle: { type: string }
+        activityCount: { type: integer }
+        starsPossible: { type: integer }
+
+    LevelSummary:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        ageBand: { type: string }
+        color: { type: string }
+        units:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+              theme: { type: string }
+              icon: { type: string }
+              lessonCount: { type: integer }
+
+    MapNode:
+      type: object
+      required: [id, title, status, starsEarned, starsPossible]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        objective: { type: string }
+        levelId: { type: string }
+        levelTitle: { type: string }
+        levelColor: { type: string }
+        unitId: { type: string }
+        unitTitle: { type: string }
+        icon: { type: string }
+        status: { type: string, enum: [locked, available, in-progress, completed] }
+        starsEarned: { type: integer }
+        starsPossible: { type: integer }
+        attempts: { type: integer }
+
+    AwardedBadge:
+      type: object
+      required: [badgeId, awardedAt, title, description, icon]
+      properties:
+        badgeId: { type: string }
+        awardedAt: { type: string, format: date-time }
+        title: { type: string }
+        description: { type: string }
+        icon: { type: string }
+
+    LessonProgress:
+      type: object
+      properties:
+        lessonId: { type: string }
+        status: { type: string, enum: [locked, available, in-progress, completed] }
+        starsEarned: { type: integer }
+        starsPossible: { type: integer }
+        attempts: { type: integer }
+        lastAttemptAt: { type: string, format: date-time }
+        bestScore: { type: number, minimum: 0, maximum: 1 }
+
+    ChildProgress:
+      type: object
+      required:
+        [childId, totalStars, badges, lessons, skillMastery, currentStreakDays, longestStreakDays, speakingRecordings, totalMinutesLearned]
+      properties:
+        childId: { type: string }
+        totalStars: { type: integer }
+        badges:
+          type: array
+          items: { $ref: '#/components/schemas/AwardedBadge' }
+        lessons:
+          type: object
+          additionalProperties: { $ref: '#/components/schemas/LessonProgress' }
+        skillMastery:
+          type: object
+          additionalProperties: { type: number, minimum: 0, maximum: 1 }
+        currentStreakDays: { type: integer }
+        longestStreakDays: { type: integer }
+        speakingRecordings: { type: integer }
+        totalMinutesLearned: { type: number }
+
+    ParentSettings:
+      type: object
+      required:
+        [childId, dailyLimitMinutes, sharingRequiresApproval, microphoneEnabled, offlineDownloadsEnabled, audioEnabled, caregiverLocale, allowOutboundNetwork]
+      properties:
+        childId: { type: string }
+        dailyLimitMinutes:
+          type: integer
+          minimum: 0
+          maximum: 180
+          description: 0 means no limit. A limit never removes earned rewards.
+        bedtimeLock: { type: string }
+        bedtimeWake: { type: string }
+        sharingRequiresApproval: { type: boolean }
+        microphoneEnabled: { type: boolean }
+        offlineDownloadsEnabled: { type: boolean }
+        audioEnabled: { type: boolean }
+        caregiverLocale: { type: string }
+        allowOutboundNetwork:
+          type: boolean
+          default: false
+          description: Off by default. The app is designed to work with no network.
+
+    TeacherReport:
+      type: object
+      required:
+        [childId, periodStart, periodEnd, minutesLearned, sessionsCompleted, lessonsCompleted, starsEarned, possibleStars, skillMastery, strengths, focusAreas, recentActivity]
+      properties:
+        childId: { type: string }
+        periodStart: { type: string, format: date-time }
+        periodEnd: { type: string, format: date-time }
+        minutesLearned: { type: number }
+        sessionsCompleted: { type: integer }
+        lessonsCompleted: { type: integer }
+        starsEarned: { type: integer }
+        possibleStars: { type: integer }
+        skillMastery:
+          type: object
+          additionalProperties: { type: number, minimum: 0, maximum: 1 }
+        strengths:
+          type: array
+          items: { type: string }
+        focusAreas:
+          type: array
+          items: { type: string }
+        recentActivity:
+          type: array
+          items:
+            type: object
+            properties:
+              lessonId: { type: string }
+              lessonTitle: { type: string }
+              completedAt: { type: string, format: date-time }
+              score: { type: number }

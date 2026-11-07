@@ -1,0 +1,6 @@
+workflows:
+  syncSpecToCollection:
+    - spec: ../postman/specs/sparkle-english.yaml
+      collection: ../postman/collections/sparkle-english
+      options:
+        folderStrategy: Tags

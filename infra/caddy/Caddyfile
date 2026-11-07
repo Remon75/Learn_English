@@ -1,0 +1,51 @@
+# Sparkle English - edge reverse proxy
+#
+# Caddy (Apache-2.0) terminates TLS, routes requests and adds the security
+# headers. It is chosen because it obtains and renews certificates
+# automatically with no third-party account and no cron job.
+
+{
+	# Replace with your own address so certificate expiry warnings reach
+	# you. This is the only address Caddy ever uses.
+	email {$ACME_EMAIL}
+}
+
+{$SPARKLE_DOMAIN} {
+	encode zstd gzip
+
+	# Security headers. The app makes no third-party requests, so the
+	# policy can be maximally strict.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "geolocation=(), camera=(), microphone=(self), payment=(), usb=(), interest-cohort=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+	}
+
+	# The API, the lesson media and the health check.
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	handle /media/* {
+		reverse_proxy api:8080
+	}
+
+	handle /health {
+		reverse_proxy api:8080
+	}
+
+	# Everything else is the static PWA.
+	handle {
+		reverse_proxy web:8080
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

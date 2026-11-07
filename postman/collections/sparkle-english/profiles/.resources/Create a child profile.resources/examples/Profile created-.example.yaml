@@ -1,0 +1,37 @@
+$kind: http-example
+name: Profile created.
+request:
+  url: "{{baseUrl}}/api/v1/profiles"
+  method: POST
+  headers:
+    Accept: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "nickname": "Sam",
+        "avatarId": "fox",
+        "ageBand": "3-4",
+        "caregiverPin": "1234"
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "profile": {
+          "id": "string",
+          "avatarId": "string",
+          "ageBand": "3-4",
+          "createdAt": "1971-10-16T21:01:08.456Z",
+          "currentLevelId": "string",
+          "nickname": "string"
+        },
+        "deviceToken": "string",
+        "message": "string"
+      }
+order: 1000

@@ -1,0 +1,13 @@
+$kind: http-request
+description: Used by the caregiver profile switcher. Returns no secrets.
+url: "{{baseUrl}}/api/v1/profiles"
+method: GET
+headers:
+  Accept: application/json
+settings: {}
+examples: ./.resources/List local profiles.resources/examples
+order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: pm.test('returns a profiles array', () => pm.expect(pm.response.json()).to.have.property('profiles'));

@@ -1,0 +1,19 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/api/v1/profiles/me"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/Get the profile bound to the presented device token.resources/examples
+order: 4000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: pm.test('returns the profile', () => pm.response.to.have.status(200));

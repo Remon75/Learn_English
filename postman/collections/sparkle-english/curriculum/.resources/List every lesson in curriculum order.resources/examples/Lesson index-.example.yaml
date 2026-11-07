@@ -1,0 +1,45 @@
+$kind: http-example
+name: Lesson index.
+request:
+  url: "{{baseUrl}}/api/v1/curriculum/lessons"
+  method: GET
+  headers:
+    Accept: application/json
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "lessons": [
+          {
+            "id": "string",
+            "title": "string",
+            "objective": "string",
+            "levelId": "string",
+            "levelTitle": "string",
+            "unitId": "string",
+            "unitTitle": "string",
+            "activityCount": 2798,
+            "starsPossible": 518
+          },
+          {
+            "id": "string",
+            "title": "string",
+            "objective": "string",
+            "levelId": "string",
+            "levelTitle": "string",
+            "unitId": "string",
+            "unitTitle": "string",
+            "activityCount": 6662,
+            "starsPossible": 577
+          }
+        ]
+      }
+order: 1000

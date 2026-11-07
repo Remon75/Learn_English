@@ -1,0 +1,28 @@
+$kind: http-example
+name: The requested resource does not exist.
+request:
+  url: "{{baseUrl}}/api/v1/curriculum/lessons/:lessonId"
+  method: GET
+  headers:
+    Accept: application/json
+  pathVariables:
+    - key: lessonId
+      value: l1-u1-s1
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "error": "string",
+        "message": "string"
+      }
+order: 2000

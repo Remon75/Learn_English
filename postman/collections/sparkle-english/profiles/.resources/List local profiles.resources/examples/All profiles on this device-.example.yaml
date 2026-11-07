@@ -1,0 +1,39 @@
+$kind: http-example
+name: All profiles on this device.
+request:
+  url: "{{baseUrl}}/api/v1/profiles"
+  method: GET
+  headers:
+    Accept: application/json
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "profiles": [
+          {
+            "id": "string",
+            "avatarId": "string",
+            "ageBand": "7-8",
+            "createdAt": "1965-09-10T23:03:51.465Z",
+            "currentLevelId": "string",
+            "nickname": "string"
+          },
+          {
+            "id": "string",
+            "avatarId": "string",
+            "ageBand": "5-6",
+            "createdAt": "1956-05-11T22:56:56.281Z",
+            "currentLevelId": "string",
+            "nickname": "string"
+          }
+        ]
+      }
+order: 1000

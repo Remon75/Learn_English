@@ -1,0 +1,62 @@
+$kind: http-example
+name: The report.
+request:
+  url: "{{baseUrl}}/api/v1/parent/report?days=7"
+  method: GET
+  headers:
+    - key: X-Device-Token
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+    - key: Accept
+      value: application/json
+  queryParams:
+    days: "7"
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "report": {
+          "childId": "string",
+          "periodStart": "1995-06-17T12:28:52.936Z",
+          "periodEnd": "1996-07-26T14:40:13.558Z",
+          "minutesLearned": 4985.007622744888,
+          "sessionsCompleted": 9975,
+          "lessonsCompleted": 4908,
+          "starsEarned": 7822,
+          "possibleStars": 5852,
+          "skillMastery": {
+            "key_0": 0.9400204985868186
+          },
+          "strengths": [
+            "string",
+            "string"
+          ],
+          "focusAreas": [
+            "string",
+            "string"
+          ],
+          "recentActivity": [
+            {
+              "lessonId": "string",
+              "lessonTitle": "string",
+              "completedAt": "1990-06-19T11:15:53.541Z",
+              "score": 7706.3700603321195
+            },
+            {
+              "lessonId": "string",
+              "lessonTitle": "string",
+              "completedAt": "2015-06-15T22:00:49.595Z",
+              "score": 9324.131805915385
+            }
+          ]
+        }
+      }
+order: 1000

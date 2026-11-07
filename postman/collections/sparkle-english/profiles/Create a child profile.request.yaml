@@ -1,0 +1,30 @@
+$kind: http-request
+description: |
+  Creates a profile and binds it to a freshly generated device token.
+  The response is the only time the device token is returned; the client
+  must store it. The caregiver PIN is stored as a salted scrypt hash.
+url: "{{baseUrl}}/api/v1/profiles"
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nickname": "Sam",
+      "avatarId": "fox",
+      "ageBand": "3-4",
+      "caregiverPin": "1234"
+    }
+settings: {}
+examples: ./.resources/Create a child profile.resources/examples
+order: 3000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('creates the profile', () => pm.response.to.have.status(201));
+      pm.test('issues a device token', () => pm.expect(pm.response.json().deviceToken).to.be.a('string').and.have.length.above(20));
+      pm.test('returns no email or password', () => { const p = pm.response.json().profile; pm.expect(p).to.not.have.property('email'); pm.expect(p).to.not.have.property('password'); });
+      pm.collectionVariables.set('deviceToken', pm.response.json().deviceToken);

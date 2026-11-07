@@ -1,0 +1,88 @@
+# Sparkle English - self-hosted infrastructure
+#
+# Four containers, all FOSS, all on one machine:
+#
+#   caddy - edge reverse proxy, automatic TLS (Apache-2.0)
+#   api   - the Node.js API and the media library (MIT)
+#   web   - the static PWA served by Caddy (MIT)
+#
+# The SQLite database and the media library live in named volumes, so a
+# rebuild never touches a child's data.
+
+services:
+  caddy:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+    image: sparkle/web:latest
+    container_name: sparkle-web
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - sparkle
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    image: sparkle/api:latest
+    container_name: sparkle-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      HOST: "0.0.0.0"
+      SPARKLE_DATA_DIR: /data
+      SPARKLE_DB_PATH: /data/sparkle.db
+      SPARKLE_MEDIA_ROOT: /media
+      SPARKLE_CORS_ORIGINS: ${SPARKLE_DOMAIN:-}
+      SPARKLE_RATE_LIMIT_MAX: "600"
+    volumes:
+      # The database survives image rebuilds and upgrades.
+      - api_data:/data
+    expose:
+      - "8080"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - sparkle
+
+  edge:
+    image: caddy:2.10-alpine
+    container_name: sparkle-edge
+    restart: unless-stopped
+    ports:
+      - "${SPARKLE_HTTP_PORT:-80}:80"
+      - "${SPARKLE_HTTPS_PORT:-443}:443"
+    environment:
+      SPARKLE_DOMAIN: ${SPARKLE_DOMAIN:-localhost}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.invalid}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+    networks:
+      - sparkle
+
+networks:
+  sparkle:
+    driver: bridge
+
+volumes:
+  api_data:
+  caddy_data:
+  caddy_config:

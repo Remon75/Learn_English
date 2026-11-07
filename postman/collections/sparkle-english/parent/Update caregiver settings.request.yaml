@@ -1,0 +1,35 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/api/v1/parent/settings"
+method: PUT
+headers:
+  Content-Type: application/json
+  Accept: application/json
+  X-Caregiver-Pin: "{{caregiverPin}}"
+body:
+  type: json
+  content: |-
+    {
+      "dailyLimitMinutes": 122,
+      "bedtimeLock": "20:02",
+      "bedtimeWake": "04:03",
+      "sharingRequiresApproval": false,
+      "microphoneEnabled": true,
+      "offlineDownloadsEnabled": false,
+      "audioEnabled": true,
+      "caregiverLocale": "string",
+      "allowOutboundNetwork": false
+    }
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/Update caregiver settings.resources/examples
+order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: pm.test('saves the settings', () => pm.response.to.have.status(200));

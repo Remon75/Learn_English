@@ -1,0 +1,29 @@
+$kind: http-example
+name: PIN changed.
+request:
+  url: "{{baseUrl}}/api/v1/parent/pin"
+  method: PUT
+  headers:
+    - key: X-Device-Token
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "newPin": "9418"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "updated": false
+      }
+order: 1000

@@ -1,0 +1,30 @@
+$kind: http-request
+description: |
+  Computes stars, updates skill mastery, awards any newly earned
+  badges and unlocks the next lesson. The response is the only place
+  stars and badges are ever granted.
+url: "{{baseUrl}}/api/v1/sessions/:sessionId/complete"
+method: POST
+headers:
+  Accept: application/json
+pathVariables:
+  - key: sessionId
+    value: "{{sessionId}}"
+    disabled: false
+    description: "(Required) "
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/Finalise a session and apply rewards.resources/examples
+order: 3000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('completes the session', () => pm.response.to.have.status(200));
+      pm.test('stars never exceed the maximum', () => { const r = pm.response.json(); pm.expect(r.starsEarned).to.be.at.most(r.starsPossible); });
+      pm.test('awards badges as an array', () => pm.expect(pm.response.json().newBadges).to.be.an('array'));

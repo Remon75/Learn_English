@@ -1,0 +1,21 @@
+# Normalise line endings in the repository.
+# The working tree keeps LF everywhere so Dockerfiles, Caddy configs and
+# shell snippets behave the same on Windows, macOS and Linux.
+* text=auto eol=lf
+
+# Binary assets - never touched by the line-ending filter.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.opus binary
+*.m4a binary
+*.db binary
+*.sqlite binary
+
+# Lockfiles are generated; keep them exactly as the tooling writes them.
+package-lock.json -diff

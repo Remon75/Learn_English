@@ -1,0 +1,26 @@
+$kind: http-request
+description: |
+  Coarse, aggregate data about what was practised. There is no session
+  replay, no keystroke trace, and no third-party analytics sink.
+url: "{{baseUrl}}/api/v1/parent/report?days=7"
+method: GET
+headers:
+  Accept: application/json
+  X-Caregiver-Pin: "{{caregiverPin}}"
+queryParams:
+  days: "7"
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/Aggregate teacher report.resources/examples
+order: 4000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('returns the report', () => pm.response.to.have.status(200));
+      pm.test('the report is aggregate', () => { const r = pm.response.json().report; pm.expect(r).to.not.have.property('events'); pm.expect(r).to.not.have.property('keystrokes'); });

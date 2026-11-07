@@ -1,0 +1,37 @@
+$kind: collection
+description: Versioned, offline-capable curriculum content.
+order: 2000
+name: Sparkle English API
+variables:
+  - key: baseUrl
+    value: http://localhost:8080
+  - key: deviceToken
+    value: ""
+    description: Issued by POST /api/v1/profiles.
+  - key: caregiverPin
+    value: "1234"
+    description: 4-digit PIN for adult-only endpoints.
+  - key: newPin
+    value: "1357"
+    description: Replacement PIN used by the PIN-change request.
+  - key: lessonId
+    value: l1-u1-s1
+  - key: sessionId
+    value: ""
+  - key: activityId
+    value: ""
+  - key: correctResponse
+    value: ""
+scripts:
+  - type: http:beforeRequest
+    language: text/javascript
+    code: |-
+      const deviceToken = pm.collectionVariables.get('deviceToken');
+      if (deviceToken && !pm.request.headers.has('X-Device-Token')) {
+        pm.request.headers.add('X-Device-Token', deviceToken);
+      }
+
+      const caregiverPin = pm.collectionVariables.get('caregiverPin');
+      if (caregiverPin && pm.request.url.toString().includes('/api/v1/parent/')) {
+        pm.request.headers.add('X-Caregiver-Pin', caregiverPin);
+      }

@@ -1,0 +1,20 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/api/v1/parent/progress"
+method: GET
+headers:
+  Accept: application/json
+  X-Caregiver-Pin: "{{caregiverPin}}"
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/Full progress snapshot.resources/examples
+order: 3000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: pm.test('returns the progress snapshot', () => pm.response.to.have.status(200));

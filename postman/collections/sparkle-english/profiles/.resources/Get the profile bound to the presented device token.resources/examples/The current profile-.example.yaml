@@ -1,0 +1,31 @@
+$kind: http-example
+name: The current profile.
+request:
+  url: "{{baseUrl}}/api/v1/profiles/me"
+  method: GET
+  headers:
+    - key: X-Device-Token
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+    - key: Accept
+      value: application/json
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": "string",
+        "avatarId": "string",
+        "ageBand": "5-6",
+        "createdAt": "1963-05-27T14:32:41.476Z",
+        "currentLevelId": "string",
+        "nickname": "string"
+      }
+order: 1000

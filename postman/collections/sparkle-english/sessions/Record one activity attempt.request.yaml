@@ -1,0 +1,38 @@
+$kind: http-request
+description: |
+  The server grades the response and owns the score. Retries for the
+  same activity collapse to the best attempt when the session is
+  completed, so a child who taps a wrong answer a few times is neither
+  penalised nor able to inflate their star count.
+url: "{{baseUrl}}/api/v1/sessions/:sessionId/events"
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+pathVariables:
+  - key: sessionId
+    value: "{{sessionId}}"
+    disabled: false
+    description: "(Required) "
+body:
+  type: json
+  content: |
+    {
+      "activityId": "{{activityId}}",
+      "response": "{{correctResponse}}",
+      "elapsedMs": 2400,
+      "hintsUsed": 0
+    }
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/Record one activity attempt.resources/examples
+order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: pm.test('grades the attempt', () => { const r = pm.response.json(); pm.expect(r).to.have.property('score'); pm.expect(r.score).to.be.within(0, 1); });

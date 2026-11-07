@@ -1,0 +1,39 @@
+$kind: http-example
+name: Event accepted and graded.
+request:
+  url: "{{baseUrl}}/api/v1/sessions/:sessionId/events"
+  method: POST
+  headers:
+    - key: X-Device-Token
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: sessionId
+      value: string
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "activityId": "a-greet-choose",
+        "response": "hand",
+        "elapsedMs": 2400,
+        "hintsUsed": 0
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "accepted": false,
+        "score": 0.9728029137477279,
+        "correct": false
+      }
+order: 1000

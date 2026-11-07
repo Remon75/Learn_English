@@ -1,0 +1,25 @@
+$kind: http-request
+description: |
+  Returns every lesson with its lock state. A lesson unlocks when the
+  previous lesson in curriculum order is completed. Locked lessons stay
+  visible so the child can see the whole journey.
+url: "{{baseUrl}}/api/v1/map"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/The child's learning map.resources/examples
+order: 4000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('returns the map', () => pm.response.to.have.status(200));
+      pm.test('exactly one lesson is available at the start', () => { const nodes = pm.response.json().nodes; pm.expect(nodes.filter(n => n.status === 'available').length).to.eql(1); });
+      pm.test('locked lessons stay visible', () => pm.expect(pm.response.json().nodes.filter(n => n.status === 'locked').length).to.be.above(0));

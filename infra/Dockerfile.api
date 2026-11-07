@@ -1,0 +1,57 @@
+# Sparkle English - API image
+#
+# Multi-stage build. The runtime image contains only production
+# dependencies and the compiled output.
+
+FROM node:24-alpine AS build
+WORKDIR /app
+
+# Install dependencies first so the layer is cached across source changes.
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json packages/shared/
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+RUN npm ci --omit=optional --no-audit --no-fund
+
+COPY tsconfig.base.json ./
+COPY packages/shared packages/shared
+COPY apps/api apps/api
+COPY apps/web/public apps/web/public
+
+RUN npm run build --workspace @sparkle/shared \
+ && npm run build --workspace @sparkle/api
+
+# Reinstall with production-only dependencies for the runtime stage.
+RUN npm prune --omit=dev
+
+
+FROM node:24-alpine AS runtime
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    PORT=8080 \
+    HOST=0.0.0.0 \
+    SPARKLE_DATA_DIR=/data \
+    SPARKLE_DB_PATH=/data/sparkle.db \
+    SPARKLE_MEDIA_ROOT=/media
+
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/packages/shared/package.json ./packages/shared/package.json
+COPY --from=build /app/packages/shared/dist ./packages/shared/dist
+COPY --from=build /app/apps/api/package.json ./apps/api/package.json
+COPY --from=build /app/apps/api/dist ./apps/api/dist
+
+# The lesson media is read-only content that ships with the image.
+COPY --from=build /app/apps/web/public/media ./media
+
+# The container runs unprivileged. The data volume is chowned at start-up.
+RUN mkdir -p /data && chown -R node:node /data /app
+USER node
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["node", "apps/api/dist/server.js"]

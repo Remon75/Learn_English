@@ -1,0 +1,181 @@
+$kind: http-example
+name: The lesson.
+request:
+  url: "{{baseUrl}}/api/v1/curriculum/lessons/:lessonId"
+  method: GET
+  headers:
+    Accept: application/json
+  pathVariables:
+    - key: lessonId
+      value: l1-u1-s1
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "lesson": {
+          "id": "string",
+          "title": "string",
+          "objective": "string",
+          "activities": [
+            {
+              "id": "string",
+              "kind": "choose",
+              "prompt": "string",
+              "stars": 3,
+              "seconds": 5202,
+              "difficulty": 2,
+              "skills": [
+                "string",
+                "string"
+              ],
+              "instructionAudio": {
+                "kind": "image",
+                "src": "string",
+                "label": "string",
+                "durationSec": 1307.5536605902016,
+                "transcript": "string"
+              },
+              "stimulus": {
+                "kind": "audio",
+                "src": "string",
+                "label": "string",
+                "durationSec": 6889.963452704251,
+                "transcript": "string"
+              },
+              "options": [
+                {
+                  "id": "string",
+                  "label": "string",
+                  "correct": true,
+                  "media": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  }
+                },
+                {
+                  "id": "string",
+                  "label": "string",
+                  "correct": false,
+                  "media": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  }
+                }
+              ],
+              "pairs": [
+                {
+                  "id": "string",
+                  "left": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  },
+                  "right": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  }
+                },
+                {
+                  "id": "string",
+                  "left": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  },
+                  "right": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  }
+                }
+              ],
+              "orderTokens": [
+                "string",
+                "string"
+              ],
+              "solution": [
+                "string",
+                "string"
+              ],
+              "speakTarget": "string",
+              "expected": "string"
+            },
+            {
+              "id": "string",
+              "kind": "match",
+              "prompt": "string",
+              "stars": 2,
+              "seconds": 9793,
+              "difficulty": 2,
+              "skills": [
+                "string",
+                "string"
+              ],
+              "instructionAudio": {
+                "kind": "image",
+                "src": "string",
+                "label": "string",
+                "durationSec": 3978.9639902301133,
+                "transcript": "string"
+              },
+              "stimulus": {
+                "kind": "image",
+                "src": "string",
+                "label": "string",
+                "durationSec": 7511.1448601819575,
+                "transcript": "string"
+              },
+              "options": [
+                {
+                  "id": "string",
+                  "label": "string",
+                  "correct": false,
+                  "media": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  }
+                },
+                {
+                  "id": "string",
+                  "label": "string",
+                  "correct": false,
+                  "media": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  }
+                }
+              ],
+              "pairs": [
+                {
+                  "id": "string",
+                  "left": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  },
+                  "right": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  }
+                },
+                {
+                  "id": "string",
+                  "left": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  },
+                  "right": {
+                    "value": "<Error: Too many levels of nesting to fake this schema>"
+                  }
+                }
+              ],
+              "orderTokens": [
+                "string",
+                "string"
+              ],
+              "solution": [
+                "string",
+                "string"
+              ],
+              "speakTarget": "string",
+              "expected": "string"
+            }
+          ]
+        }
+      }
+order: 1000

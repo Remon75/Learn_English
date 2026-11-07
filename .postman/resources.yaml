@@ -1,0 +1,15 @@
+cloudResources:
+  collections:
+    ../postman/collections/sparkle-english: 60019000-2793a7f8-f6f8-4dac-a166-2e92cb9203ab
+  environments:
+    ../postman/environments/Sparkle Local.environment.yaml: 60019000-340b645b-e905-44a1-9b58-099d1f8c5b33
+  specs:
+    ../postman/specs/sparkle-english.yaml: 1d427b6a-03ad-49c7-b8fc-9869e2fe6539
+localResources:
+  collections:
+    - ../postman/collections/sparkle-english
+  specs:
+    - ../postman/specs/sparkle-english.yaml
+workspace:
+  id: 2c2f03f3-adc8-41cc-8d53-447ed4f4ed04
+  name: My Workspace

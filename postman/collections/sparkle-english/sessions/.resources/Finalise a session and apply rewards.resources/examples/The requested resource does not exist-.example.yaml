@@ -1,0 +1,32 @@
+$kind: http-example
+name: The requested resource does not exist.
+request:
+  url: "{{baseUrl}}/api/v1/sessions/:sessionId/complete"
+  method: POST
+  headers:
+    - key: X-Device-Token
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: sessionId
+      value: string
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "error": "string",
+        "message": "string"
+      }
+order: 2000

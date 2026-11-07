@@ -1,0 +1,22 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/api/v1/parent/export"
+method: GET
+headers:
+  Accept: application/json
+  X-Caregiver-Pin: "{{caregiverPin}}"
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/Export all data for this child as JSON.resources/examples
+order: 5000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('returns the export', () => pm.response.to.have.status(200));
+      pm.test('exports the profile', () => pm.expect(pm.response.json()).to.have.property('profile'));

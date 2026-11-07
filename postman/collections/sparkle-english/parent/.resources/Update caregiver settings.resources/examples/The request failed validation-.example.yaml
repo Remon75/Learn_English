@@ -1,0 +1,38 @@
+$kind: http-example
+name: The request failed validation.
+request:
+  url: "{{baseUrl}}/api/v1/parent/settings"
+  method: PUT
+  headers:
+    - key: X-Device-Token
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "dailyLimitMinutes": 122,
+        "bedtimeLock": "20:02",
+        "bedtimeWake": "04:03",
+        "sharingRequiresApproval": false,
+        "microphoneEnabled": true,
+        "offlineDownloadsEnabled": false,
+        "audioEnabled": true,
+        "caregiverLocale": "string",
+        "allowOutboundNetwork": false
+      }
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "error": "string",
+        "message": "string"
+      }
+order: 2000

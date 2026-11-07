@@ -1,0 +1,30 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/api/v1/parent/pin"
+method: PUT
+headers:
+  Content-Type: application/json
+  Accept: application/json
+  X-Caregiver-Pin: "{{caregiverPin}}"
+body:
+  type: json
+  content: |
+    {
+      "newPin": "{{newPin}}"
+    }
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/Change the caregiver PIN.resources/examples
+order: 6000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('changes the PIN', () => pm.response.to.have.status(200));
+      // Later requests must use the new PIN.
+      pm.collectionVariables.set('caregiverPin', pm.collectionVariables.get('newPin'));

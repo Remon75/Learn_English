@@ -1,0 +1,22 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/api/v1/parent/settings"
+method: GET
+headers:
+  Accept: application/json
+  X-Caregiver-Pin: "{{caregiverPin}}"
+auth:
+  type: apikey
+  credentials:
+    key: X-Device-Token
+    value: "{{deviceToken}}"
+    in: header
+settings: {}
+examples: ./.resources/Read caregiver settings.resources/examples
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('returns the settings', () => pm.response.to.have.status(200));
+      pm.test('outbound network is off by default', () => pm.expect(pm.response.json().settings.allowOutboundNetwork).to.eql(false));
