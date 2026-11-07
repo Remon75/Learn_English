@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useAppStore } from '../store/app';
-import { play, playTone } from '../lib/audio';
+import { playTone, speak } from '../lib/audio';
 
 /**
  * The learning map.
@@ -37,9 +37,8 @@ export function MapScreen() {
   const handleOpen = (lessonId: string, title: string) => {
     playTone('tap');
     // Speak the lesson name so a pre-reader knows what they are choosing.
-    play(`/media/audio/lesson-${lessonId}.mp3`, 1);
+    speak(title);
     void openLesson(lessonId);
-    void title;
   };
 
   return (

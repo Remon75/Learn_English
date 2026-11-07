@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { existsSync, readFileSync } from 'node:fs';
 import { CURRICULUM, allLessons, getLesson, nextLessonId } from '@sparkle/shared';
 import { gradeResponse, starsForActivity } from '@sparkle/shared';
 
@@ -111,6 +112,77 @@ describe('activity payloads the UI depends on', () => {
       }
     }
   });
+
+  it('gives every listen activity something to tap', () => {
+    // ListenActivity renders `activity.options`. Without them the child sees
+    // an empty screen, can never answer, and the lesson cannot advance.
+    for (const { lesson } of allLessons()) {
+      for (const activity of lesson.activities) {
+        if (activity.kind !== 'listen') continue;
+        expect(activity.options?.length, activity.id).toBeGreaterThan(1);
+        expect(activity.options?.filter((o) => o.correct).length, activity.id).toBe(1);
+      }
+    }
+  });
+
+  it('gives every listen option a picture the child can recognise', () => {
+    for (const { lesson } of allLessons()) {
+      for (const activity of lesson.activities) {
+        if (activity.kind !== 'listen') continue;
+        for (const option of activity.options ?? []) {
+          expect(option.media?.kind, `${activity.id}/${option.id}`).toBe('image');
+          expect(option.media?.src, `${activity.id}/${option.id}`).toMatch(/^\/media\/img\//);
+        }
+      }
+    }
+  });
+});
+
+describe('the media manifest keeps every lesson audible', () => {
+  interface Manifest {
+    version: number;
+    audio: Record<string, { text?: string; file?: string; placeholder?: boolean }>;
+  }
+
+  const AUDIO_EXTENSIONS = ['.wav', '.mp3', '.ogg', '.opus', '.m4a'];
+
+  const manifest = JSON.parse(
+    readFileSync(new URL('../public/media/manifest.json', import.meta.url), 'utf8'),
+  ) as Manifest;
+
+  it('lists every audio asset the curriculum plays', () => {
+    const ids = new Set<string>();
+    for (const { lesson } of allLessons()) {
+      for (const activity of lesson.activities) {
+        for (const ref of [
+          activity.stimulus,
+          activity.instructionAudio,
+          ...(activity.options ?? []).map((o) => o.media),
+          ...(activity.pairs ?? []).flatMap((p) => [p.left, p.right]),
+        ]) {
+          if (!ref || ref.kind !== 'audio') continue;
+          const file = ref.src.slice(ref.src.lastIndexOf('/') + 1);
+          ids.add(file.replace(/\.[^.]+$/, ''));
+        }
+      }
+    }
+
+    expect(ids.size).toBeGreaterThan(0);
+    for (const id of ids) {
+      const entry = manifest.audio[id];
+      if (entry) {
+        // A placeholder is spoken, so it must carry the text it stands for.
+        expect(entry.text?.length, `manifest text for "${id}"`).toBeGreaterThan(0);
+        continue;
+      }
+      // No manifest entry means the asset is a real recording, so the file
+      // has to exist in the media library.
+      const found = AUDIO_EXTENSIONS.some((ext) =>
+        existsSync(new URL(`../public/media/audio/${id}${ext}`, import.meta.url)),
+      );
+      expect(found, `no audio file for "${id}"`).toBe(true);
+    }
+  });
 });
 
 describe('the UI can grade the answers it collects', () => {
@@ -122,6 +194,18 @@ describe('the UI can grade the answers it collects', () => {
 
     expect(gradeResponse(choose, correct.id)).toBe(1);
     expect(gradeResponse(choose, wrong.id)).toBe(0);
+  });
+
+  it('grades a listen answer the way ListenActivity sends it', () => {
+    const lesson = getLesson('l1-u1-s1')!;
+    const listen = lesson.activities.find((a) => a.kind === 'listen')!;
+    const correct = listen.options!.find((o) => o.correct)!;
+    const wrong = listen.options!.find((o) => !o.correct)!;
+
+    expect(gradeResponse(listen, correct.id)).toBe(1);
+    expect(gradeResponse(listen, wrong.id)).toBe(0);
+    // The "I heard it" safety net of a listen activity without options.
+    expect(gradeResponse(listen, 'heard')).toBe(1);
   });
 
   it('grades a match answer the way MatchActivity sends it', () => {

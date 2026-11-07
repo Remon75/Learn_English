@@ -34,15 +34,16 @@ full-time developer.
 | Item | Status |
 |---|---|
 | Full 6-level curriculum: 14 units, 21 lessons, 68 activities, 7 activity types | ✅ |
-| Generated media library: 54 audio, 63 illustrations, 3 PWA icons | ✅ |
+| Generated media library: 53 audio, 63 illustrations, 3 PWA icons | ✅ |
 | Skill mastery model with per-skill 0–1 scores | ✅ |
 | Aggregate teacher report | ✅ |
 | Learning map with sequential unlocking and visible locked lessons | ✅ |
 | Badge catalogue (12 badges, all server-evaluated) | ✅ |
 
 **The one gap:** the generated audio is placeholder chimes, not narration.
-Everything downstream depends on real audio, so it is the first item of
-Phase 2.
+The app works around this by speaking the words with the device's own voice
+(see `docs/ASSETS.md` §2.1), but recorded narration is better, and it is the
+first item of Phase 2.
 
 ---
 

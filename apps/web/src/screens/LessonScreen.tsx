@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Activity, Lesson } from '@sparkle/shared';
 import { api } from '../lib/api';
 import { useAppStore } from '../store/app';
-import { play, playTone, speak } from '../lib/audio';
+import { loadMediaManifest, playMedia, playTone, speak } from '../lib/audio';
 import { cacheLesson } from '../lib/offline';
 import { StarBurst } from '../components/StarBurst';
 import { ChooseActivity } from '../components/activities/ChooseActivity';
@@ -74,14 +74,24 @@ export function LessonScreen() {
     if (!activity) return;
     startedAtRef.current = Date.now();
     hintsRef.current = 0;
+    let cancelled = false;
 
-    if (activity.stimulus?.kind === 'audio') {
-      play(activity.stimulus.src);
-    } else if (activity.instructionAudio?.kind === 'audio') {
-      play(activity.instructionAudio.src);
-    } else {
-      speak(activity.prompt);
-    }
+    // The media manifest decides whether a stimulus is a placeholder tone
+    // (which is spoken) or a real recording (which is played).
+    void loadMediaManifest().then(() => {
+      if (cancelled) return;
+      if (activity.stimulus?.kind === 'audio') {
+        playMedia(activity.stimulus);
+      } else if (activity.instructionAudio?.kind === 'audio') {
+        playMedia(activity.instructionAudio);
+      } else {
+        speak(activity.prompt);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [activity]);
 
   const handleResult = useCallback(

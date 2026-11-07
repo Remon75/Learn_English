@@ -47,6 +47,7 @@ the npm registry at the versions actually installed (see `docs/LICENSES.md`).
 | State-machine animation | **Rive runtime** (`@rive-app/canvas`) | MIT | Interactive, input-driven character animation with a state machine. Runtime is MIT; see §1.8. |
 | Audio playback | **Howler.js 2** | MIT | One API for HTML5 and Web Audio backends, with a single HTML5 audio element to satisfy browser autoplay rules. |
 | Audio synthesis / analysis | **Web Audio API** | W3C standard | Native browser API — not a dependency. Reward tones are generated on-device; microphone level is measured locally. |
+| Speech | **Web Speech API** | W3C standard | Speaks the placeholder vocabulary with the device's own voice when no recording exists. Nothing is sent to a service by the app. |
 
 **Deliberately excluded**
 
@@ -107,6 +108,11 @@ resolves each path to whatever format actually exists on disk.
   until the first user gesture (browser autoplay policy).
 - **Synthesis:** Web Audio API oscillators for tap/correct/reward tones. No
   audio files, nothing downloaded, nothing transmitted.
+- **Speech:** the Web Speech API speaks the lesson vocabulary when the media
+  library only holds a placeholder tone. The media manifest
+  (`/media/manifest.json`) decides what is a placeholder; a local
+  (`localService`) voice is preferred. See `docs/ASSETS.md` §2.1 and
+  `docs/PRIVACY.md` §2.4.
 - **Analysis:** `AnalyserNode` drives a visual loudness meter so a child can
   see that the app is hearing them even with the volume off.
 - **Format negotiation:** the API resolves `/media/audio/<id>` to the best
@@ -401,7 +407,7 @@ for one experienced full-time developer.
 | Item | Status |
 |---|---|
 | Full 6-level curriculum (14 units, 21 lessons, 68 activities, 7 activity types) | ✅ |
-| Procedurally generated media library (54 audio, 63 images) + 3 PWA icons | ✅ |
+| Procedurally generated media library (53 audio, 63 images) + 3 PWA icons | ✅ |
 | Generated PWA icons and favicon | ✅ |
 | Skill mastery model and caregiver report | ✅ |
 

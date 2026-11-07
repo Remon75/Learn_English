@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "generator": "scripts/generate-media.mjs",
+  "note": "Placeholder audio is a tone, not speech. The app speaks the listed text with the device voice instead of playing the tone. Replace the file with a real recording, or set \"placeholder\" to false, to switch back to file playback.",
+  "audio": {
+    "animal-moo": {
+      "text": "Moo",
+      "file": "animal-moo.wav",
+      "placeholder": true
+    },
+    "blue": {
+      "text": "Blue",
+      "file": "blue.wav",
+      "placeholder": true
+    },
+    "brother": {
+      "text": "Brother",
+      "file": "brother.wav",
+      "placeholder": true
+    },
+    "cat": {
+      "text": "Cat",
+      "file": "cat.wav",
+      "placeholder": true
+    },
+    "dad": {
+      "text": "Dad",
+      "file": "dad.wav",
+      "placeholder": true
+    },
+    "dog": {
+      "text": "Dog",
+      "file": "dog.wav",
+      "placeholder": true
+    },
+    "family-animals": {
+      "text": "Bat, cat, hat, rat",
+      "file": "family-animals.wav",
+      "placeholder": true
+    },
+    "goodbye": {
+      "text": "Goodbye",
+      "file": "goodbye.wav",
+      "placeholder": true
+    },
+    "green": {
+      "text": "Green",
+      "file": "green.wav",
+      "placeholder": true
+    },
+    "hello": {
+      "text": "Hello",
+      "file": "hello.wav",
+      "placeholder": true
+    },
+    "letter-a": {
+      "text": "A for apple",
+      "file": "letter-a.wav",
+      "placeholder": true
+    },
+    "letter-b": {
+      "text": "B for ball",
+      "file": "letter-b.wav",
+      "placeholder": true
+    },
+    "letter-c": {
+      "text": "C for cat",
+      "file": "letter-c.wav",
+      "placeholder": true
+    },
+    "letter-d": {
+      "text": "D for dog",
+      "file": "letter-d.wav",
+      "placeholder": true
+    },
+    "letter-e": {
+      "text": "E for egg",
+      "file": "letter-e.wav",
+      "placeholder": true
+    },
+    "letter-f": {
+      "text": "F for fish",
+      "file": "letter-f.wav",
+      "placeholder": true
+    },
+    "letter-g": {
+      "text": "G for goat",
+      "file": "letter-g.wav",
+      "placeholder": true
+    },
+    "letter-h": {
+      "text": "H for hat",
+      "file": "letter-h.wav",
+      "placeholder": true
+    },
+    "letter-i": {
+      "text": "I for igloo",
+      "file": "letter-i.wav",
+      "placeholder": true
+    },
+    "letter-j": {
+      "text": "J for jam",
+      "file": "letter-j.wav",
+      "placeholder": true
+    },
+    "letter-k": {
+      "text": "K for kite",
+      "file": "letter-k.wav",
+      "placeholder": true
+    },
+    "letter-l": {
+      "text": "L for lion",
+      "file": "letter-l.wav",
+      "placeholder": true
+    },
+    "letter-m": {
+      "text": "M for moon",
+      "file": "letter-m.wav",
+      "placeholder": true
+    },
+    "letter-n": {
+      "text": "N for nest",
+      "file": "letter-n.wav",
+      "placeholder": true
+    },
+    "letter-o": {
+      "text": "O for owl",
+      "file": "letter-o.wav",
+      "placeholder": true
+    },
+    "letter-p": {
+      "text": "P for pig",
+      "file": "letter-p.wav",
+      "placeholder": true
+    },
+    "letter-q": {
+      "text": "Q for queen",
+      "file": "letter-q.wav",
+      "placeholder": true
+    },
+    "letter-r": {
+      "text": "R for rabbit",
+      "file": "letter-r.wav",
+      "placeholder": true
+    },
+    "letter-s": {
+      "text": "S for sun",
+      "file": "letter-s.wav",
+      "placeholder": true
+    },
+    "letter-t": {
+      "text": "T for tree",
+      "file": "letter-t.wav",
+      "placeholder": true
+    },
+    "letter-u": {
+      "text": "U for umbrella",
+      "file": "letter-u.wav",
+      "placeholder": true
+    },
+    "letter-v": {
+      "text": "V for van",
+      "file": "letter-v.wav",
+      "placeholder": true
+    },
+    "letter-w": {
+      "text": "W for water",
+      "file": "letter-w.wav",
+      "placeholder": true
+    },
+    "letter-x": {
+      "text": "X for box",
+      "file": "letter-x.wav",
+      "placeholder": true
+    },
+    "letter-y": {
+      "text": "Y for yo-yo",
+      "file": "letter-y.wav",
+      "placeholder": true
+    },
+    "letter-z": {
+      "text": "Z for zebra",
+      "file": "letter-z.wav",
+      "placeholder": true
+    },
+    "mum": {
+      "text": "Mum",
+      "file": "mum.wav",
+      "placeholder": true
+    },
+    "pronoun-she": {
+      "text": "She is my sister.",
+      "file": "pronoun-she.wav",
+      "placeholder": true
+    },
+    "pronoun-we": {
+      "text": "We are friends.",
+      "file": "pronoun-we.wav",
+      "placeholder": true
+    },
+    "red": {
+      "text": "Red",
+      "file": "red.wav",
+      "placeholder": true
+    },
+    "sentence-dog-runs": {
+      "text": "The dog runs fast.",
+      "file": "sentence-dog-runs.wav",
+      "placeholder": true
+    },
+    "sister": {
+      "text": "Sister",
+      "file": "sister.wav",
+      "placeholder": true
+    },
+    "story-lost-duck": {
+      "text": "A little duck could not find her mother.",
+      "file": "story-lost-duck.wav",
+      "placeholder": true
+    },
+    "sun": {
+      "text": "Sun",
+      "file": "sun.wav",
+      "placeholder": true
+    },
+    "word-bed": {
+      "text": "Bed",
+      "file": "word-bed.wav",
+      "placeholder": true
+    },
+    "word-cat": {
+      "text": "Cat",
+      "file": "word-cat.wav",
+      "placeholder": true
+    },
+    "word-cup": {
+      "text": "Cup",
+      "file": "word-cup.wav",
+      "placeholder": true
+    },
+    "word-dog": {
+      "text": "Dog",
+      "file": "word-dog.wav",
+      "placeholder": true
+    },
+    "word-door": {
+      "text": "Door",
+      "file": "word-door.wav",
+      "placeholder": true
+    },
+    "word-fish": {
+      "text": "Fish",
+      "file": "word-fish.wav",
+      "placeholder": true
+    },
+    "word-lamp": {
+      "text": "Lamp",
+      "file": "word-lamp.wav",
+      "placeholder": true
+    },
+    "word-sun": {
+      "text": "Sun",
+      "file": "word-sun.wav",
+      "placeholder": true
+    },
+    "yellow": {
+      "text": "Yellow",
+      "file": "yellow.wav",
+      "placeholder": true
+    }
+  }
+}

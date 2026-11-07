@@ -350,6 +350,23 @@ describe('media delivery', () => {
     expect(res.statusCode).toBe(404);
   });
 
+  it('serves the media manifest as JSON', async () => {
+    const res = await app.inject({ method: 'GET', url: '/media/manifest.json' });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toContain('application/json');
+
+    const manifest = res.json() as {
+      version: number;
+      audio: Record<string, { text?: string; file?: string; placeholder?: boolean }>;
+    };
+    expect(manifest.version).toBeGreaterThan(0);
+    // The manifest is what tells the client to speak a placeholder instead
+    // of playing its tone, so it must describe the audio library.
+    expect(Object.keys(manifest.audio).length).toBeGreaterThan(0);
+    expect(manifest.audio['hello']).toBeDefined();
+    expect(manifest.audio['hello']?.text?.length).toBeGreaterThan(0);
+  });
+
   it('blocks path traversal attempts', async () => {
     const res = await app.inject({ method: 'GET', url: '/media/../../package.json' });
     expect([400, 404]).toContain(res.statusCode);

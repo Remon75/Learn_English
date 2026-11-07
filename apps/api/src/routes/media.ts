@@ -35,6 +35,10 @@ const CONTENT_TYPES: Record<string, string> = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
+  // The media manifest describes the audio library. It is plain data, not
+  // an asset, but it lives next to the assets so a self-hosted install
+  // ships one coherent media tree.
+  '.json': 'application/json',
 };
 
 /** Parses `Accept` into a list of media types, most preferred first. */

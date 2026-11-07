@@ -45,8 +45,12 @@ binaries, stock images or fonts are downloaded. This step is idempotent.
 npm run assets
 ```
 
-Produces 54 audio files and 63 SVG illustrations in
-`apps/web/public/media/`, plus the PWA icons.
+Produces 53 audio files and 63 SVG illustrations in
+`apps/web/public/media/`, plus the media manifest and the PWA icons.
+
+The generated audio is a placeholder tone per word, not speech. The app
+**speaks** the word with the device's own voice instead of playing the tone,
+so a fresh checkout is already audible. See `docs/ASSETS.md` §2.1.
 
 ### 3. Run the API and the web app
 

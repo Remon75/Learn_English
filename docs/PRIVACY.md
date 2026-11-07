@@ -91,8 +91,9 @@ Everything the application stores, and where it lives.
 | IndexedDB (`sparkle-english`, Dexie) | `events` | Queued offline activity attempts awaiting delivery |
 | IndexedDB | `lessons` | Cached lesson payloads for offline playback |
 | IndexedDB | `sessions` | In-flight session state so a reload does not lose a lesson |
-| Cache Storage (Workbox) | precache + runtime | App shell, JS/CSS chunks, lesson media |
+| Cache Storage (Workbox) | precache + runtime | App shell, JS/CSS chunks, lesson media, media manifest |
 | Browser microphone | — | **Nothing.** Audio is analysed in memory by an `AnalyserNode` and discarded. |
+| Speech synthesis | — | **Nothing.** Words are spoken by the operating system; the app keeps no copy and sends no text. |
 
 ### 2.3 What is deliberately **not** collected
 
@@ -107,6 +108,25 @@ Everything the application stores, and where it lives.
 | Contact list, photos, files | No file picker, no contacts API. |
 | Keystrokes / screen recording | Not captured. |
 | Third-party request metadata | There are no third-party requests. |
+| Spoken text | Lesson words are synthesised by the operating system (see §2.4). The app sends them nowhere. |
+
+### 2.4 The device voice, honestly
+
+The repository ships placeholder audio: a tone per word, not speech. A tone
+teaches a child nothing, so the app **speaks** the word instead, using the
+Web Speech API of the device it runs on (`apps/web/src/lib/audio.ts`).
+
+| Question | Answer |
+|---|---|
+| Does the app send the word to a server? | **No.** The app calls `speechSynthesis.speak()` and nothing else. |
+| Where is the word synthesised? | Inside the browser and the operating system — typically a local voice (Windows SAPI, macOS `say`, Linux speech-dispatcher). |
+| Which voice is chosen? | The app prefers a voice with `localService === true`, i.e. one the device synthesises itself. |
+| Can it leave the device? | On a platform where the browser offers **only** cloud voices, the *browser* may send the word to that platform's speech service. The app does not create that situation and does not select such a voice when a local one exists, but it cannot forbid the browser from doing it either. |
+| How is it removed? | Ship real recordings. The media manifest (`apps/web/public/media/manifest.json`) then makes the app play the file instead of speaking it. See `docs/ASSETS.md` §2.1. |
+
+The words spoken are the lesson vocabulary itself (`hello`, `cat`,
+`the dog runs fast`). No name, no personal data and nothing the child says
+is ever spoken.
 
 ---
 
@@ -118,9 +138,10 @@ Everything the application stores, and where it lives.
 │  React PWA ──fetch──▶ Fastify API ──▶ SQLite (one file)               │
 │     │                    ▲                                           │
 │     │                    │                                           │
-│     └── localStorage: device token                                    │
-│     └── IndexedDB: offline queue                                      │
-│     └── Cache: media + app shell                                      │
+│     ├── localStorage: device token                                    │
+│     ├── IndexedDB: offline queue                                      │
+│     ├── Cache: media + app shell                                      │
+│     └── speak() ──▶ the operating system's own voice (no network)     │
 │                                                                        │
 │  No arrows leave this box.                                            │
 └────────────────────────────────────────────────────────────────────────┘
@@ -129,6 +150,8 @@ Everything the application stores, and where it lives.
 The API's CORS configuration reflects the origin, the service worker is
 same-origin only, and the CSP forbids every other origin. The microphone is
 the only peripheral device touched, and its output never reaches the network.
+Speech synthesis leaves the browser only as sound, handled by the operating
+system (§2.4).
 
 ---
 

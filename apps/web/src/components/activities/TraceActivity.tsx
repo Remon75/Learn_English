@@ -142,7 +142,7 @@ export function TraceActivity({ activity, onResult, onNext }: ActivityProps) {
           <button
             className="btn btn--ghost"
             onClick={() => {
-              import('../../lib/audio').then(({ play }) => play(activity.stimulus!.src));
+              import('../../lib/audio').then(({ playMedia }) => playMedia(activity.stimulus!));
             }}
           >
             <span aria-hidden="true">🔊</span> Hear it

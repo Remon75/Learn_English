@@ -27,6 +27,9 @@ mkdirSync(resolve(mediaDir, 'img'), { recursive: true });
  * a documented pipeline for recording or generating real narration (see
  * docs/ASSETS.md). The placeholders let the whole product run and be
  * tested before any voice assets exist.
+ *
+ * A tone teaches a child nothing, so the app *speaks* the text listed in
+ * `SPOKEN_TEXT` (see the media manifest below) instead of playing the tone.
  */
 function writeWav(path, frequencies, durationSec = 0.7, sampleRate = 22050) {
   const samples = Math.floor(sampleRate * durationSec);
@@ -67,6 +70,54 @@ function writeWav(path, frequencies, durationSec = 0.7, sampleRate = 22050) {
   header.writeUInt32LE(data.length, 40);
 
   writeFileSync(path, Buffer.concat([header, data]));
+}
+
+/**
+ * The text each placeholder stands for.
+ *
+ * The app speaks these words with the device voice instead of playing the
+ * tone. The curriculum's own `transcript` field wins when it has one, so
+ * this table is the fallback that keeps every asset meaningful.
+ */
+const LETTER_WORDS = {
+  a: 'apple', b: 'ball', c: 'cat', d: 'dog', e: 'egg', f: 'fish', g: 'goat',
+  h: 'hat', i: 'igloo', j: 'jam', k: 'kite', l: 'lion', m: 'moon', n: 'nest',
+  o: 'owl', p: 'pig', q: 'queen', r: 'rabbit', s: 'sun', t: 'tree', u: 'umbrella',
+  v: 'van', w: 'water', x: 'box', y: 'yo-yo', z: 'zebra',
+};
+
+const SPOKEN_TEXT = {
+  hello: 'Hello',
+  goodbye: 'Goodbye',
+  mum: 'Mum',
+  dad: 'Dad',
+  sister: 'Sister',
+  brother: 'Brother',
+  red: 'Red',
+  blue: 'Blue',
+  green: 'Green',
+  yellow: 'Yellow',
+  cat: 'Cat',
+  dog: 'Dog',
+  sun: 'Sun',
+  'word-cat': 'Cat',
+  'word-dog': 'Dog',
+  'word-fish': 'Fish',
+  'word-sun': 'Sun',
+  'word-cup': 'Cup',
+  'word-bed': 'Bed',
+  'word-door': 'Door',
+  'word-lamp': 'Lamp',
+  'animal-moo': 'Moo',
+  'pronoun-she': 'She is my sister.',
+  'pronoun-we': 'We are friends.',
+  'sentence-dog-runs': 'The dog runs fast.',
+  'family-animals': 'Bat, cat, hat, rat',
+  'story-lost-duck': 'A little duck could not find her mother.',
+};
+
+for (const [letter, word] of Object.entries(LETTER_WORDS)) {
+  SPOKEN_TEXT[`letter-${letter}`] = `${letter.toUpperCase()} for ${word}`;
 }
 
 const audioLibrary = {
@@ -125,17 +176,48 @@ const audioLibrary = {
   'story-lost-duck': [523, 587, 659, 523],
 };
 
+const manifestAudio = {};
+
 for (const [name, frequencies] of Object.entries(audioLibrary)) {
   const isStory = name.startsWith('story-');
-  writeWav(
-    resolve(mediaDir, 'audio', `${name}.wav`),
-    frequencies,
-    isStory ? 2.4 : 0.7,
-  );
+  const file = `${name}.wav`;
+  writeWav(resolve(mediaDir, 'audio', file), frequencies, isStory ? 2.4 : 0.7);
+  manifestAudio[name] = {
+    text: SPOKEN_TEXT[name] ?? name,
+    file,
+    placeholder: true,
+  };
 }
 
-// Lesson announcements reuse the letter tones so the map has audio.
-writeWav(resolve(mediaDir, 'audio', 'lesson-l1-u1-s1.wav'), [523, 659, 784], 1.2);
+/* ----------------------------- Manifest -------------------------------- */
+
+/**
+ * The media manifest tells the app which audio files are placeholders and
+ * what they stand for.
+ *
+ * The client speaks the text instead of playing the tone. Dropping a real
+ * recording in with the same logical id (or removing the entry) switches
+ * that one asset back to file playback - no code change.
+ *
+ * The file is deterministic: no timestamps, sorted keys, stable formatting.
+ */
+const manifest = {
+  version: 1,
+  generator: 'scripts/generate-media.mjs',
+  note:
+    'Placeholder audio is a tone, not speech. The app speaks the listed text with the ' +
+    'device voice instead of playing the tone. Replace the file with a real recording, ' +
+    'or set "placeholder" to false, to switch back to file playback.',
+  audio: Object.fromEntries(
+    Object.entries(manifestAudio).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+  ),
+};
+
+writeFileSync(
+  resolve(mediaDir, 'manifest.json'),
+  `${JSON.stringify(manifest, null, 2)}\n`,
+  'utf8',
+);
 
 /* ------------------------------ Images ------------------------------ */
 
@@ -251,10 +333,55 @@ for (const [name, colour] of Object.entries({
   circle(name, colour);
 }
 
-// Hand and wave
-circle('hand', PALETTE.skin);
-circle('foot', PALETTE.skin);
-circle('wave', PALETTE.skin);
+// Body and gesture.
+//
+// These three are the options of the very first listening activity, so they
+// must be told apart at a glance by a child who cannot read yet: an open
+// palm, a foot, and a waving hand.
+svgFile(
+  'hand',
+  `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <g fill="${PALETTE.skin}" stroke="#E0A38C" stroke-width="5" stroke-linejoin="round">
+      <rect x="44" y="94" width="112" height="86" rx="36"/>
+      <rect x="58" y="30" width="25" height="80" rx="12"/>
+      <rect x="87" y="18" width="25" height="92" rx="12"/>
+      <rect x="116" y="28" width="25" height="82" rx="12"/>
+      <rect x="143" y="48" width="23" height="62" rx="11"/>
+      <rect x="16" y="100" width="46" height="24" rx="12" transform="rotate(-32 39 112)"/>
+    </g>
+  </svg>`,
+);
+
+svgFile(
+  'foot',
+  `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <g fill="${PALETTE.skin}" stroke="#E0A38C" stroke-width="5" stroke-linejoin="round">
+      <path d="M60 148 Q44 100 70 82 Q104 60 138 76 Q166 90 160 128 Q154 162 116 168 Q80 174 60 148 Z"/>
+      <circle cx="70" cy="76" r="15"/>
+      <circle cx="96" cy="58" r="16"/>
+      <circle cx="123" cy="60" r="15"/>
+      <circle cx="145" cy="76" r="13"/>
+    </g>
+  </svg>`,
+);
+
+svgFile(
+  'wave',
+  `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <g fill="${PALETTE.skin}" stroke="#E0A38C" stroke-width="5" stroke-linejoin="round">
+      <rect x="30" y="98" width="106" height="82" rx="34"/>
+      <rect x="44" y="40" width="24" height="74" rx="12"/>
+      <rect x="72" y="28" width="24" height="86" rx="12"/>
+      <rect x="100" y="36" width="24" height="78" rx="12"/>
+      <rect x="126" y="54" width="22" height="60" rx="11"/>
+      <rect x="6" y="104" width="42" height="22" rx="11" transform="rotate(-32 27 115)"/>
+    </g>
+    <g fill="none" stroke="${PALETTE.blue}" stroke-width="9" stroke-linecap="round">
+      <path d="M154 76 A30 30 0 0 1 154 118"/>
+      <path d="M172 62 A46 46 0 0 1 172 132"/>
+    </g>
+  </svg>`,
+);
 
 // Letters (A-Z) - vector glyphs generated from a simple stroke font.
 const LETTER_PATHS = {
@@ -298,3 +425,4 @@ for (const [letter, path] of Object.entries(LETTER_PATHS)) {
 console.log(`Media library generated in ${mediaDir}`);
 console.log(`  audio: ${readdirSync(resolve(mediaDir, 'audio')).length} files`);
 console.log(`  images: ${readdirSync(resolve(mediaDir, 'img')).length} files`);
+console.log(`  manifest: ${Object.keys(manifest.audio).length} placeholder entries`);

@@ -22,13 +22,14 @@ npm run assets:icons    # PWA icons + favicon
 
 | Asset | Count | Format | Generator |
 |---|---|---|---|
-| Lesson audio | **54** | WAV, 22.05 kHz, 16-bit mono | `scripts/generate-media.mjs` |
+| Lesson audio | **53** | WAV, 22.05 kHz, 16-bit mono | `scripts/generate-media.mjs` |
 | Illustrations | **63** | SVG, 200×200 | `scripts/generate-media.mjs` |
+| Media manifest | **1** | JSON | `scripts/generate-media.mjs` |
 | PWA icons | **3** | PNG, 192 px / 512 px / 512 px maskable | `scripts/generate-icons.mjs` |
 | Favicon | **1** | SVG | `scripts/generate-icons.mjs` |
 
-Total size: ~1.7 MiB for the whole media library (54 audio files at 1.7 MiB,
-63 SVG illustrations at 17 KiB, icons at 8 KiB).
+Total size: ~1.7 MiB for the whole media library (53 audio files at 1.7 MiB,
+63 SVG illustrations at 17 KiB, the manifest at 6 KiB, icons at 8 KiB).
 
 ### 1.1 Audio inventory
 
@@ -41,7 +42,6 @@ Total size: ~1.7 MiB for the whole media library (54 audio files at 1.7 MiB,
 | Pronouns and sentences | `pronoun-she`, `pronoun-we`, `sentence-dog-runs` |
 | Story | `story-lost-duck` (2.4 s) |
 | Alphabet | `letter-a` … `letter-z` (26 files) |
-| Lesson announcement | `lesson-l1-u1-s1` |
 
 ### 1.2 Illustration inventory
 
@@ -76,8 +76,62 @@ narration is a file drop (§5) — no code change.
 | Sample rate | 22,050 Hz |
 | Bit depth | 16-bit |
 | Channels | mono |
-| Duration | 0.7 s for words, 1.2 s for the lesson announcement, 2.4 s for the story |
+| Duration | 0.7 s for words, 2.4 s for the story |
 | Envelope | 12 ms attack, 125 ms release, to avoid clicks |
+
+### 2.1 The app speaks the placeholders instead of beeping them
+
+A tone teaches a child nothing, so the app never plays a placeholder tone as
+a lesson stimulus. Instead it **speaks the word**, using the Web Speech API
+of the device the app is running on.
+
+The decision is driven by the **media manifest**,
+`apps/web/public/media/manifest.json`, which the generator writes next to the
+assets:
+
+```json
+{
+  "version": 1,
+  "generator": "scripts/generate-media.mjs",
+  "note": "Placeholder audio is a tone, not speech. ...",
+  "audio": {
+    "hello": { "text": "Hello", "file": "hello.wav", "placeholder": true }
+  }
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `text` | The words the placeholder stands for. The app speaks them. |
+| `file` | The generated file. If the served file no longer has this name, a real recording has taken its place. |
+| `placeholder` | `false` marks the asset as a real recording that must be played as a file. |
+
+The client (`apps/web/src/lib/audio.ts`) resolves a media reference like this:
+
+1. The media id is the file name without its extension (`hello`).
+2. If the manifest has an entry for that id **and** the file still has the
+   name recorded in the manifest, the asset is a placeholder.
+3. A placeholder is **spoken** — the transcript of the activity wins over the
+   manifest text, so "C A T, cat" is spoken as three sounds and a word.
+4. Anything else — a real recording, or a device without speech synthesis —
+   is **played** from disk.
+
+The manifest is fetched once at start-up (`loadMediaManifest()`) and is
+served by the API from `/media/manifest.json` with `Content-Type:
+application/json`.
+
+### 2.2 What the device voice means for privacy
+
+Speech synthesis happens inside the browser and the operating system. The
+app itself sends no text anywhere. The app prefers a voice with
+`localService === true`, which the operating system synthesises locally
+(Windows SAPI, macOS `say`, Linux speech-dispatcher).
+
+Honest limits: on some platforms a browser may offer cloud voices only. In
+that case the *browser*, not the app, would send the word to that platform's
+service. The app does not create that situation — it simply uses the speech
+API that the device offers — but an operator who needs a hard guarantee
+should ship real recordings (§6), which removes the dependency entirely.
 
 ---
 
@@ -124,6 +178,13 @@ Drop the file in with the same name:
 cp ~/recordings/hello.wav apps/web/public/media/audio/hello.wav
 ```
 
+Then mark the asset as a real recording in the manifest, otherwise the app
+keeps speaking it instead of playing it:
+
+```json
+"hello": { "text": "Hello", "file": "hello.wav", "placeholder": false }
+```
+
 Restart the API (it reads from disk on each request) and hard-reload the
 client. Done.
 
@@ -139,16 +200,22 @@ rm apps/web/public/media/audio/hello.wav
 The API now serves `hello.ogg` to clients that accept Opus and `hello.wav`
 to those that do not.
 
+**No manifest edit is needed in this case.** The manifest records
+`hello.wav`, the server now serves `hello.ogg`, the names no longer match,
+so the app treats the asset as a real recording and plays the file.
+
 ### 4.3 Replace a whole vocabulary with real narration
 
 1. Record or generate one file per logical id (see §6 for local TTS).
 2. Encode to Opus (best size/quality for speech) and keep a WAV fallback.
 3. Place them in `apps/web/public/media/audio/`.
-4. Update the `durationSec` on the `MediaRef` in
+4. Set `"placeholder": false` for each id in
+   `apps/web/public/media/manifest.json` (or delete the entries).
+5. Update the `durationSec` on the `MediaRef` in
    `packages/shared/src/curriculum.ts` so the progress bar is honest.
 
 The curriculum's `transcript` field is already populated for most prompts;
-it is shown in the caregiver report.
+it is shown in the caregiver report and spoken when a placeholder is used.
 
 ### 4.4 Replacing the illustrations
 
@@ -177,10 +244,17 @@ same conventions:
      prompt: 'Listen',
      stimulus: audio('/media/audio/my-new-word', 'My new word', 1.0, 'My new word'),
      expected: 'my-new-word',
+     options: [
+       choice('my-new-word', 'My new word', true, image('/media/img/my-new-word', 'My new word')),
+       choice('other', 'Other', false, image('/media/img/other', 'Something else')),
+     ],
      stars: 1,
      skills: ['listening', 'vocabulary'],
    })
    ```
+
+   A `listen` activity always needs `options`: they are what the child taps,
+   and without them the lesson cannot continue.
 
 3. Rebuild the shared package if the API must see it:
    `npm run build --workspace @sparkle/shared`
@@ -188,7 +262,9 @@ same conventions:
    placeholder — otherwise the generator will overwrite your file. **If you
    replace a generated file, remove its entry from `scripts/generate-media.mjs`
    in the same commit**, otherwise the next `npm run assets` silently reverts
-   your work.
+   your work. The same commit must update
+   `apps/web/public/media/manifest.json`, because that file tells the client
+   what to speak.
 
 ---
 
@@ -261,8 +337,9 @@ the manifest and the HTML reference the file names, not the bytes.
 
 | Layer | Strategy | Effect |
 |---|---|---|
-| App shell | Precache — 16 entries, ~434 KiB | The app opens with no network at all. |
+| App shell | Precache — 16 entries, ~437 KiB | The app opens with no network at all. |
 | Lesson media | Cache-first, 90-day expiry | A played lesson replays instantly offline. |
+| Media manifest | Cache-first, with the media | The client always knows which words to speak. |
 | PixiJS chunk | **Excluded** from precache, dynamically imported | A slow connection never waits for a particle engine. |
 
 The precache manifest is deliberately small. Pre-caching all 117 media files
@@ -307,5 +384,6 @@ rm -rf apps/web/public/media apps/web/public/icons
 npm run assets
 ```
 
-The result is byte-identical to what is committed. If it is not, something
-else wrote into those directories — check `git status` before committing.
+The result is byte-identical to what is committed, including
+`apps/web/public/media/manifest.json`. If it is not, something else wrote
+into those directories — check `git status` before committing.

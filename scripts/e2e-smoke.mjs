@@ -95,6 +95,29 @@ check(
   media.headers.get('content-type') ?? 'none',
 );
 
+const manifest = await call('GET', '/media/manifest.json');
+check('media manifest is served', manifest.status === 200, `status ${manifest.status}`);
+check(
+  'media manifest is JSON',
+  (manifest.headers.get('content-type') ?? '').includes('application/json'),
+  manifest.headers.get('content-type') ?? 'none',
+);
+check(
+  'media manifest describes the audio library',
+  Object.keys(manifest.body?.audio ?? {}).length > 0,
+);
+check(
+  'the manifest knows the spoken text of a word',
+  typeof manifest.body?.audio?.hello?.text === 'string',
+);
+
+const listenActivity = lesson.body?.lesson?.activities?.find((a) => a.kind === 'listen');
+check(
+  'a listen activity offers answers the child can tap',
+  (listenActivity?.options?.length ?? 0) > 1,
+  `${listenActivity?.id}: ${listenActivity?.options?.length ?? 0} options`,
+);
+
 const missing = await call('GET', '/api/v1/curriculum/lessons/does-not-exist');
 check('unknown lesson 404s', missing.status === 404, `status ${missing.status}`);
 

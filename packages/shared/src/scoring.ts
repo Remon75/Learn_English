@@ -68,6 +68,17 @@ export function gradeResponse(activity: Activity, response: string | undefined):
       return normalised === expected ? 1 : 0;
     }
     case 'listen': {
+      // A listen activity with options is answered by tapping a picture, so
+      // the answer is the option id. Clients that answer with the spoken
+      // word instead are still graded, using `expected` as the answer key.
+      const options = activity.options ?? [];
+      if (options.length) {
+        const picked = options.find((o) => o.id === normalised);
+        if (picked) return picked.correct ? 1 : 0;
+      }
+      // "I heard it" is the answer of a listen activity that offers no
+      // pictures to choose from.
+      if (normalised === 'heard') return 1;
       const expected = (activity.expected ?? '').toLowerCase();
       if (!expected) return 0;
       return normalised === expected ? 1 : 0;

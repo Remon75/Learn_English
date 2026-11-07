@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { play, playTone, createLoudnessMeter } from '../../lib/audio';
+import { playMedia, playTone, createLoudnessMeter } from '../../lib/audio';
 import { Feedback, NextButton, type ActivityProps } from './types';
 
 /**
@@ -70,7 +70,7 @@ export function SpeakActivity({ activity, onResult, onNext }: ActivityProps) {
   return (
     <div style={{ display: 'grid', gap: 'var(--space-md)', justifyItems: 'center' }}>
       {activity.stimulus?.kind === 'audio' && (
-        <button className="btn btn--ghost" onClick={() => play(activity.stimulus!.src)}>
+        <button className="btn btn--ghost" onClick={() => playMedia(activity.stimulus!)}>
           <span aria-hidden="true">🔊</span> Hear the phrase
         </button>
       )}

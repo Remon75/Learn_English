@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { play, playTone } from '../../lib/audio';
+import { playMedia, playTone } from '../../lib/audio';
 import { Feedback, NextButton, type ActivityProps } from './types';
 
 /**
@@ -157,7 +157,7 @@ export function MatchActivity({ activity, onResult, onNext }: ActivityProps) {
 
       {activity.pairs?.[0]?.right.kind === 'audio' && (
         <div style={{ textAlign: 'center' }}>
-          <button className="btn btn--ghost" onClick={() => play(activity.pairs![0]!.right.src)}>
+          <button className="btn btn--ghost" onClick={() => playMedia(activity.pairs![0]!.right)}>
             <span aria-hidden="true">🔊</span> Hear it again
           </button>
         </div>

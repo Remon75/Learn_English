@@ -72,6 +72,30 @@ describe('curriculum integrity', () => {
     }
   });
 
+  it('gives every listen activity pictures to choose from', () => {
+    // A listen activity without options leaves the child with nothing to
+    // tap and no way to reach the next activity.
+    for (const { lesson } of allLessons()) {
+      for (const activity of lesson.activities) {
+        if (activity.kind !== 'listen') continue;
+        expect(activity.options?.length, activity.id).toBeGreaterThan(1);
+        const correct = activity.options?.filter((o) => o.correct).length ?? 0;
+        expect(correct, activity.id).toBe(1);
+        expect(activity.expected?.length, activity.id).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('gives every option a picture or a readable label', () => {
+    for (const { lesson } of allLessons()) {
+      for (const activity of lesson.activities) {
+        for (const option of activity.options ?? []) {
+          expect(option.label.length, `${activity.id}/${option.id}`).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
   it('gives every order activity a matching solution', () => {
     for (const { lesson } of allLessons()) {
       for (const activity of lesson.activities) {
@@ -153,6 +177,47 @@ describe('grading', () => {
       expected: 'Hello',
     };
     expect(gradeResponse(listenActivity, ' hello ')).toBe(1);
+  });
+
+  it('grades a listen answer by the option the child tapped', () => {
+    const listenActivity = {
+      ...chooseActivity,
+      id: 'listen',
+      kind: 'listen' as const,
+      expected: 'cat',
+      options: [
+        { id: 'cat', label: 'Cat', correct: true },
+        { id: 'dog', label: 'Dog', correct: false },
+      ],
+    };
+    expect(gradeResponse(listenActivity, 'cat')).toBe(1);
+    expect(gradeResponse(listenActivity, 'dog')).toBe(0);
+  });
+
+  it('still grades a listen answer given as the spoken word', () => {
+    const listenActivity = {
+      ...chooseActivity,
+      id: 'listen',
+      kind: 'listen' as const,
+      expected: 'cat',
+      options: [
+        { id: 'cat', label: 'Cat', correct: true },
+        { id: 'dog', label: 'Dog', correct: false },
+      ],
+    };
+    expect(gradeResponse(listenActivity, ' Cat ')).toBe(1);
+    expect(gradeResponse(listenActivity, 'dog')).toBe(0);
+  });
+
+  it('accepts "I heard it" for a listen activity without options', () => {
+    const listenActivity = {
+      ...chooseActivity,
+      id: 'listen',
+      kind: 'listen' as const,
+      expected: 'hello',
+      options: [],
+    };
+    expect(gradeResponse(listenActivity, 'heard')).toBe(1);
   });
 });
 
